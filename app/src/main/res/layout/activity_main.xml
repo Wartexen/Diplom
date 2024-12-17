@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#E0F2F7">
+    <!-- Шапка -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="#3A8890">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/Def_Projects"
+            android:textColor="#FFFFFF"
+            android:textSize="25sp"
+
+            android:textStyle="bold" />
+
+
+    </LinearLayout>
+
+    <!-- Разметка Спиннеров -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        >
+
+        <Spinner
+            android:id="@+id/spinnerDpp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/spinner_selector"
+            android:popupBackground="@drawable/spinner_background_normal"
+            android:layout_marginTop="10dp"
+            android:padding="16dp" />
+
+        <Spinner
+            android:id="@+id/spinnerCommission"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/spinner_selector"
+            android:popupBackground="@drawable/spinner_background_normal"
+            android:padding="16dp"
+            android:layout_marginTop="10dp"
+             />
+
+        <Spinner
+            android:id="@+id/spinnerDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/spinner_selector"
+            android:popupBackground="@drawable/spinner_background_normal"
+            android:padding="16dp"
+            android:layout_marginTop="10dp"
+            />
+
+
+    </LinearLayout>
+
+    <!-- Разметка Кнопка -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="1dp">
+
+        <RelativeLayout
+            android:layout_width="441dp"
+            android:layout_height="match_parent"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+
+            <Button
+                android:id="@+id/buttonNext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentBottom="true"
+                android:layout_gravity="end"
+                android:layout_margin="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="18dp"
+                android:layout_marginBottom="25dp"
+                android:text="Перейти к списку >" />
+
+        </RelativeLayout>
+
+    </LinearLayout>
+
+</LinearLayout>
