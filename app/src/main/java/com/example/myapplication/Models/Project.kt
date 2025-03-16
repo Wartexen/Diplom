@@ -1,16 +1,14 @@
-package com.example.myapplication
+package com.example.myapplication.Models
 import android.os.Parcel
 import android.os.Parcelable
 
 data class Project(
-    val name: String,
-    val details: String,
-    val leader: String,
-    val direction: String,
-    val students: String
+    val ID: String,
+    val Title: String,
+    val Supervisor: String,
+    val Students: String,
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
-        parcel.readString().toString(),
         parcel.readString().toString(),
         parcel.readString().toString(),
         parcel.readString().toString(),
@@ -19,11 +17,10 @@ data class Project(
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeString(name)
-        parcel.writeString(details)
-        parcel.writeString(leader)
-        parcel.writeString(direction)
-        parcel.writeString(students)
+        parcel.writeString(ID)
+        parcel.writeString(Title)
+        parcel.writeString(Supervisor)
+        parcel.writeString(Students)
     }
 
     override fun describeContents(): Int {

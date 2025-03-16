@@ -3,7 +3,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.myapplication.Project
+import com.example.myapplication.Models.Project
 import com.example.myapplication.R
 
 class ProjectAdapter(private val projects: List<Project>) :
@@ -33,7 +33,7 @@ class ProjectAdapter(private val projects: List<Project>) :
 
     override fun onBindViewHolder(holder: ProjectViewHolder, position: Int) {
         val project = projects[position]
-        holder.projectName.text = project.name
+        holder.projectName.text = project.Title
     }
 
     override fun getItemCount(): Int = projects.size

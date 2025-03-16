@@ -1,125 +1,186 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
-    <!--  Шапка  -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:background="#3A8890">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Список проектов"
-            android:textColor="#FFFFFF"
-            android:textSize="25sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-
+    android:background="@android:color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#E0F2F7"
+        android:layout_height="match_parent"
         android:orientation="vertical">
-        <!-- Разметка ДПП ПП -->
-        <LinearLayout
+
+        <!-- Header with elevation -->
+
+        <!-- Project list with card styling -->
+
+        <androidx.appcompat.widget.Toolbar
+
+            android:layout_width="match_parent"
+            android:layout_height="74dp"
+            android:background="#3A8890"
+            android:elevation="4dp"
+            app:contentInsetStart="0dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:fontFamily="sans-serif-medium"
+                android:text="Список проектов"
+                android:textColor="#FFFFFF"
+                android:textSize="22sp" />
+        </androidx.appcompat.widget.Toolbar>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewProjects"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:paddingHorizontal="8dp" />
+
+        <!-- Button with material styling -->
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#E0F2F7"
-            android:orientation="horizontal"
-            android:padding="4dp">
+            android:background="@android:color/white"
+            android:elevation="8dp"
+            android:paddingVertical="12dp"
+            android:paddingHorizontal="16dp">
 
-            <TextView
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonNext"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ДПП ПП:  "
-                android:textSize="19sp"
-                android:textColor="#000000" />
+                android:layout_gravity="end"
+                android:text="Перейти к оцениванию"
+                android:textColor="#FFFFFF"
+                app:icon="@drawable/baseline_arrow_forward_ios_24"
+                app:iconTint="#3A8890"
+                android:backgroundTint="#3A8890"
 
-            <TextView
-                android:id="@+id/selectedDpp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="19sp"
-                android:contentDescription="Выбранное ДПП ПП"
-                android:textColor="#000000" />
-
-        </LinearLayout>
-
-        <!-- Разметка комисии -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#E0F2F7"
-            android:orientation="horizontal"
-            android:padding="4dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Комиссия: "
-                android:textSize="19sp"
-                android:textColor="#000000" />
-
-            <TextView
-                android:id="@+id/selectedCommission"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="19sp"
-                android:contentDescription="Выбранная комиссия"
-                android:textColor="#000000" />
-
-        </LinearLayout>
-
-        <!-- Разметка даты -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="#E0F2F7"
-            android:orientation="horizontal"
-            android:padding="4dp">
-
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Дата: "
-                android:textSize="19sp"
-                android:textColor="#000000" />
-
-            <TextView
-                android:id="@+id/selectedDate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="19sp"
-                android:contentDescription="Выбранная дата"
-                android:textColor="#000000" />
-
-        </LinearLayout>
-
-
-        <!-- Разметка Recylce + кнопка -->
+                app:iconGravity="end"
+                style="@style/Widget.MaterialComponents.Button.TextButton" />
+        </FrameLayout>
     </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerViewProjects"
-        android:layout_width="match_parent"
-        android:layout_marginTop="5dp"
-        android:layout_height="3dp"
-        android:layout_weight="1" />
-
-    <Button
-        android:id="@+id/buttonNext"
+    <!-- Filter FAB with improved styling -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/filterButton"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:layout_margin="16dp"
-        android:text="Перейти к оцениванию >" />
+        android:layout_height="62dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="16dp"
+        android:src="@drawable/filter_svgrepo_com"
+        app:backgroundTint="#3A8890"
+        app:borderWidth="0dp"
+        app:elevation="1dp"
+        app:fabSize="mini"
+        app:tint="@android:color/white"
+        app:useCompatPadding="true" />
 
-</LinearLayout>
+    <!-- Filter overlay with card styling -->
+    <FrameLayout
+        android:id="@+id/filterLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="#80000000"
+        android:clickable="true"
+        android:focusable="true">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="?actionBarSize"
+            android:layout_marginEnd="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_gravity="top"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Фильтр"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:layout_marginBottom="16dp"
+                    android:textColor="#3A8890" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="ДПП ПП:"
+                    android:textStyle="bold"
+                    android:textColor="#555555"
+                    android:layout_marginTop="8dp"/>
+
+                <TextView
+                    android:id="@+id/selectedDpp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:contentDescription="Выбранное ДПП ПП"
+                    android:textColor="#000000"
+                    android:paddingVertical="4dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginVertical="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Комиссия:"
+                    android:textStyle="bold"
+                    android:textColor="#555555"/>
+
+                <TextView
+                    android:id="@+id/selectedCommission"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:contentDescription="Выбранная комиссия"
+                    android:textColor="#000000"
+                    android:paddingVertical="4dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E0E0E0"
+                    android:layout_marginVertical="8dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Дата:"
+                    android:textStyle="bold"
+                    android:textColor="#555555"/>
+
+                <TextView
+                    android:id="@+id/selectedDate"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:contentDescription="Выбранная дата"
+                    android:textColor="#000000"
+                    android:paddingVertical="4dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </FrameLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

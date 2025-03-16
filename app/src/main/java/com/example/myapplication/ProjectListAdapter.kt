@@ -5,12 +5,15 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class ProjectListAdapter(private val projects: List<Project>) :
+class ProjectListAdapter(
+
+    private val projects: List<Project>) :
     RecyclerView.Adapter<ProjectListAdapter.ViewHolder>() {
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val projectName: TextView = itemView.findViewById(R.id.projectName)
-        val projectDetails: TextView = itemView.findViewById(R.id.projectDetails)
+
+        //val projectDetails: TextView = itemView.findViewById(R.id.projectDetails)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -22,7 +25,8 @@ class ProjectListAdapter(private val projects: List<Project>) :
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val project = projects[position]
         holder.projectName.text = project.name
-        holder.projectDetails.text = project.details
+
+
     }
 
     override fun getItemCount(): Int = projects.size

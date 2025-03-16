@@ -1,6 +1,8 @@
 package com.example.myapplication.Models
 
-data class DefenseSchedule (
-    val id: Int,
-    val dateTime: String
+import java.util.Date
+
+data class DefenseSchedule(
+    val ID: Int,
+    val DateTime: String
 )

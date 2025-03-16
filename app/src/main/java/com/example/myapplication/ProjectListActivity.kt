@@ -2,16 +2,31 @@ package com.example.myapplication
 import ProjectAdapter
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.myapplication.Api.ApiService
+import com.example.myapplication.Models.Project
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import android.widget.Toast
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+
 class ProjectListActivity : AppCompatActivity() {
+    private lateinit var projectsList: List<Project>
+    private lateinit var filterButton: FloatingActionButton
+    private lateinit var filterLayout: View
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_project_list)
-
 
         val selectedDpp = intent.getStringExtra("selectedDpp")
         val selectedCommission = intent.getStringExtra("selectedCommission")
@@ -24,8 +39,56 @@ class ProjectListActivity : AppCompatActivity() {
         selectedCommissionTextView.text = "$selectedCommission"
         selectedDateTextView.text = "$selectedDate"
 
+        // Инициализация Retrofit
+        val retrofit = Retrofit.Builder()
+            .baseUrl("http://10.0.2.2:8000/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
 
-        val projects = getProjects()
+        val apiService = retrofit.create(ApiService::class.java)
+        // Получение проектов
+        getProjects(apiService)
+
+        filterButton = findViewById(R.id.filterButton)
+        filterLayout = findViewById(R.id.filterLayout)
+
+        filterButton.setOnClickListener {
+            toggleFilterVisibility()
+        }
+        filterLayout.setOnClickListener{
+            toggleFilterVisibility()
+        }
+
+        val buttonNext = findViewById<Button>(R.id.buttonNext)
+//        buttonNext.setOnClickListener {
+//            val intent = Intent(this, StudentGradingActivity::class.java)
+//            intent.putExtra("selectedDpp", selectedDppTextView.text.toString())
+//            intent.putExtra("selectedCommission", selectedCommissionTextView.text.toString())
+//            intent.putExtra("selectedDate", selectedDateTextView.text.toString())
+//            startActivity(intent)
+//        }
+
+    }
+
+   private fun getProjects(apiService: ApiService) {
+        apiService.getProjects().enqueue(object : Callback<List<Project>> {
+            override fun onResponse(call: Call<List<Project>>, response: Response<List<Project>>) {
+                if (response.isSuccessful) {
+                   response.body()?.let { projects ->
+                        projectsList = projects // Сохраняем проекты в переменной класса
+                        setupRecyclerView(projects) // Настройка RecyclerView после получения данных
+                    } ?: showToast("Ответ пустой")
+                } else {
+                    showToast("Ошибка: ${response.code()}")
+                }
+            }
+            override fun onFailure(call: Call<List<Project>>, t: Throwable) {
+                showToast("Ошибка: ${t.message}")
+            }
+        })
+    }
+
+    private fun setupRecyclerView(projects: List<Project>) {
         val recyclerView = findViewById<RecyclerView>(R.id.recyclerViewProjects)
         recyclerView.layoutManager = LinearLayoutManager(this)
         val adapter = ProjectAdapter(projects)
@@ -38,83 +101,16 @@ class ProjectListActivity : AppCompatActivity() {
         }
     }
 
-
-    private fun getProjects(): List<Project> {
-        return listOf(
-            Project(
-                "Project 1",
-                //"Details 1. Руководитель: Иванов Иван Иванович, Направление: Разработка приложений, Студенты: Петров Петр Петрович, Сидоров Сидор Сидорович",
-                "Details 1.",
-                "Иванов Иван Иванович",
-                "Разработка приложений",
-                listOf("Петров Петр Петрович", "Сидоров Сидор Сидорович").toString()
-            ),
-            Project(
-                "Project 2",
-                "Details 2.",
-                "Петрова Петровна Петровна",
-                "Веб-разработка",
-                listOf("Кузнецов Кузьма Кузьмич").toString()
-            ),
-            Project(
-                "Project 3",
-                "Details 3.",
-                "Сидоров Сидор Сидорович",
-                "Анализ данных",
-                listOf("Иванова Инна Ивановна", "Петров Петр Петрович").toString()
-            )
-        )
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
+    private fun toggleFilterVisibility() {
+        if (filterLayout.visibility == View.VISIBLE) {
+            filterLayout.visibility = View.GONE
+        } else {
+            filterLayout.visibility = View.VISIBLE
+        }
+    }
+
 }
 
-
-//class ProjectListActivity : AppCompatActivity() {
-//
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        setContentView(R.layout.activity_project_list)
-//
-//        val recyclerView = findViewById<RecyclerView>(R.id.recyclerViewProjects)
-//        val buttonNext = findViewById<Button>(R.id.buttonNext)
-//
-//
-//        val projects = listOf(
-//            ProjectListAdapter.Project("Название проекта 1", "миниатюры.ru"),
-//            ProjectListAdapter.Project("Название проекта 2", "неминиатюры.ru"),
-//            ProjectListAdapter.Project("Название проекта 3", "миниатюрыминиатюры.ru"),
-//
-//        )
-//        val adapter = ProjectListAdapter(projects)
-//
-//        recyclerView.adapter = adapter
-//        recyclerView.layoutManager = LinearLayoutManager(this)
-//
-//        fun getProjects(dpp: String, commission: String, date: String): List<Project> {
-//            // Заглушка для получения данных (на время тестирования)
-//            return listOf(
-//                Project(
-//                    "Разработка UX-стратегии для сайта miniatures.ru",
-//                    "Руководитель: Аршинский Вадим Леонидович\n" +
-//                            "Направление: Продвижение и дизайн web-ресурсов\n" +
-//                            "Студенты: Иванов Иван Иванович, Петров Петр Петрович",
-//                    "Аршинский Вадим Леонидович",
-//                    "Продвижение и дизайн web-ресурсов",
-//                    listOf("Иванов Иван Иванович", "Петров Петр Петрович")
-//                ),
-//                Project(
-//                    "Другой проект",
-//                    "Руководитель: Другой руководитель\n" +
-//                            "Направление: Другое направление\n" +
-//                            "Студенты: Сидоров Сидор Сидорович",
-//                    "Другой руководитель",
-//                    "Другое направление",
-//                    listOf("Сидоров Сидор Сидорович")
-//                ))
-//
-//        }
-//
-//        buttonNext.setOnClickListener {
-//
-//        }
-//    }
-//}
