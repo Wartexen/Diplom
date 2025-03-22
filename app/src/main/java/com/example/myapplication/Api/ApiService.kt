@@ -5,6 +5,8 @@ import com.example.myapplication.Models.DefenseSchedule
 import com.example.myapplication.Models.Project
 import com.example.myapplication.Models.Protocol // ИЗМЕНИТЬ ПОТОМ
 import com.example.myapplication.Models.Question
+import com.example.myapplication.Models.SecretaryIdResponse
+import com.example.myapplication.Models.SecretaryResponse
 import com.example.myapplication.Models.Specialization
 import com.example.myapplication.Models.Student
 import com.example.myapplication.Models.UpdateQuestionRequest
@@ -30,6 +32,8 @@ interface ApiService {
     fun getCommissions(): Call<List<Commission>>
     @GET("audio/projects/")
     fun getProjects(): Call<List<Project>>
+    @GET("audio/project_list_by_defense_schedule_id/")
+    fun getProjectsBydefense_schedule_id(@Query("defense_schedule_id") defense_schedule_id: Int): Call<List<Project>>
     @GET("audio/defense_schedules/")
     fun getDefenseSchedules(): Call<List<DefenseSchedule>>
     @POST("audio/defense_schedules/addComission/")
@@ -52,13 +56,19 @@ interface ApiService {
 //        @Body Text: UpdateQuestionRequest
 //    ): Call<Void>
 
-    @PUT("audio/projects/update_question/{id}/")
+    @POST("audio/authorize/")
+    fun getSecretaryId(@Body requestBody: Map<String, String>): Call<SecretaryIdResponse>
+
+
+    @POST("audio/authenticate_user/")
+    fun authenticateUser(@Body requestBody: Map<String, String>): Call<SecretaryResponse>
+    @PUT("audio/update_question/")
     fun updateQuestion(
-        questionId: Int,
-        @Body request: UpdateQuestionRequest
+        @Query("question_id") questionId: Int,
+        @Query("text") text: String
     ): Call<Void>
 
-    @DELETE("projects/audio/delete_question/")
+    @DELETE("/audio/delete_question/")
     fun deleteQuestion(
         @Query("question_id") questionId: Int
     ): Call<Void>
@@ -69,8 +79,13 @@ interface ApiService {
         @Body Text: Text // IZMENTь!!!
     ): Call<Void>
 
-    @POST("android_login/")
-    fun login(@Body request: LoginRequest): Call<LoginResponse>
-    abstract fun createProtocol(protocol: Protocol): Any // УРАТЬ ПОТОМ
+    @GET("audio/specializations_by_secretary/")
+    fun getSpecializationsBySecretary(@Query("secretary_id") secretaryId: Int): Call<List<Specialization>>
+
+    @GET("audio/commission_list_by_member/")
+    fun getCommissionsBySecretary(@Query("secretary_id") secretaryId: Int): Call<List<Commission>>
+
+    @GET("audio/get_today_defenses_by_specialization/")
+    fun getTodayDefensesBySpecialization(@Query("specialization_id") commissionId: Int, @Query("today") date: String): Call<List<DefenseSchedule>>
 
 }

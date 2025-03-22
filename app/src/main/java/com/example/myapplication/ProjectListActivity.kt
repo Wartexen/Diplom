@@ -29,6 +29,7 @@ class ProjectListActivity : AppCompatActivity() {
         setContentView(R.layout.activity_project_list)
 
         val selectedDpp = intent.getStringExtra("selectedDpp")
+        val selectedScheduleId = intent.getIntExtra("selectedScheduleId", -1)
         val selectedCommission = intent.getStringExtra("selectedCommission")
         val selectedDate = intent.getStringExtra("selectedDate")
         val selectedDppTextView = findViewById<TextView>(R.id.selectedDpp)
@@ -47,7 +48,7 @@ class ProjectListActivity : AppCompatActivity() {
 
         val apiService = retrofit.create(ApiService::class.java)
         // Получение проектов
-        getProjects(apiService)
+        getProjects(apiService, selectedScheduleId)
 
         filterButton = findViewById(R.id.filterButton)
         filterLayout = findViewById(R.id.filterLayout)
@@ -70,8 +71,8 @@ class ProjectListActivity : AppCompatActivity() {
 
     }
 
-   private fun getProjects(apiService: ApiService) {
-        apiService.getProjects().enqueue(object : Callback<List<Project>> {
+    private fun getProjects(apiService: ApiService, defenseScheduleId: Int) {
+        apiService.getProjectsBydefense_schedule_id(defenseScheduleId).enqueue(object : Callback<List<Project>> {
             override fun onResponse(call: Call<List<Project>>, response: Response<List<Project>>) {
                 if (response.isSuccessful) {
                    response.body()?.let { projects ->

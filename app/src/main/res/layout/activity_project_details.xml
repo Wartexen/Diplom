@@ -114,23 +114,6 @@
             </com.google.android.material.card.MaterialCardView>
 
             <!-- вопросы -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="16dp"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="2dp">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/questions"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Просмотреть вопросы"
-                    android:textColor="#3A8890"
-                    android:padding="12dp"
-                    style="@style/Widget.MaterialComponents.Button.TextButton" />
-            </com.google.android.material.card.MaterialCardView>
 
             <!-- запись аудио -->
             <com.google.android.material.card.MaterialCardView
