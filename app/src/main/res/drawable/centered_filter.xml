@@ -1,0 +1,5 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:drawable="@drawable/filter_svgrepo_com"
+        android:gravity="center" />  <!-- Центрирует иконку -->
+</layer-list>
