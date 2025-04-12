@@ -1,4 +1,5 @@
 package com.example.myapplication
+import android.content.Context
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -188,13 +189,39 @@ class LoginActivity : AppCompatActivity() {
 }*/
 
 class LoginActivity : AppCompatActivity() {
+    private val AUTH_REQUEST_CODE = 1001
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
+        fun startBitrixAuth() {
+
+        }
         val buttonBitrixLogin = findViewById<Button>(R.id.buttonBitrixLogin)
         buttonBitrixLogin.setOnClickListener {
-            startActivity(Intent(this, BitrixAuthActivity::class.java))
+            val intent = BitrixAuthActivity.createStartIntent(this)
+            startActivityForResult(intent, AUTH_REQUEST_CODE)
+           // startActivity(Intent(this, BitrixAuthActivity::class.java))
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == AUTH_REQUEST_CODE) {
+            when (resultCode) {
+                RESULT_OK -> {
+                    // Авторизация успешна
+                    val prefs = getSharedPreferences("BitrixAuth", Context.MODE_PRIVATE)
+                    val email = prefs.getString("email", null)
+                    Toast.makeText(this, "Welcome, $email!", Toast.LENGTH_SHORT).show()
+                }
+                RESULT_CANCELED -> {
+                    // Ошибка авторизации
+                    val error = data?.getStringExtra("error") ?: "Unknown error"
+                    Toast.makeText(this, "Auth failed: $error", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 }
+
