@@ -16,8 +16,17 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+    // Включение генерации BuildConfig
+    buildFeatures {
+        viewBinding = true
+        buildConfig = true // если еще не добавлено
+    }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "BITRIX_CLIENT_ID", "\"local.65581f0597f2b3.73164583\"")
+            buildConfigField("String", "BITRIX_SECRET_KEY", "\"9FTLONYzoMlenvlQBm1TUTfRf1x7ZAUtJK948jeyM2mGmvH0z7\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -41,6 +50,8 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.9.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.0")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.0")
+    implementation("androidx.browser:browser:1.6.0") // Chrome Custom Tabs
+    implementation("androidx.core:core-ktx:1.9.0")    // Для работы с Uri
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

@@ -6,19 +6,20 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import android.webkit.WebResourceRequest
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.myapplication.Api.ApiService
-import com.example.myapplication.Api.LoginRequest
-import com.example.myapplication.Api.LoginResponse
+import com.example.myapplication.Models.BitrixAuthResponse
 import com.example.myapplication.Models.SecretaryIdResponse
 import com.example.myapplication.Models.SecretaryResponse
-import okhttp3.OkHttpClient
-import java.net.CookieManager
-import java.net.CookiePolicy
+
+// Замените на реальный package name вашего приложения
 
 /*class LoginActivity : AppCompatActivity() {
     *private lateinit var usernameEditText: EditText
@@ -88,65 +89,7 @@ import java.net.CookiePolicy
         }
     }
 }*/
-
-/*class LoginActivity : AppCompatActivity() {
-    private lateinit var editTextLogin: EditText
-    private lateinit var editTextPassword: EditText
-    private lateinit var buttonLogin: Button
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login) // Создайте файл макета activity_login.xml
-
-        editTextLogin = findViewById(R.id.editTextLogin)
-        editTextPassword = findViewById(R.id.editTextPassword)
-        buttonLogin = findViewById(R.id.buttonLogin)
-
-        buttonLogin.setOnClickListener {
-            val login = editTextLogin.text.toString()
-            val password = editTextPassword.text.toString()
-            authenticateUser(login, password)
-        }
-    }
-
-    private fun authenticateUser(login: String, password: String) {
-        val retrofit = Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8000/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-        val apiService = retrofit.create(ApiService::class.java)
-
-        val requestBody = mapOf("login" to login, "password" to password)
-
-        apiService.authenticateUser(requestBody).enqueue(object : Callback<SecretaryResponse> {
-            override fun onResponse(call: Call<SecretaryResponse>, response: Response<SecretaryResponse>) {
-                if (response.isSuccessful) {
-                    response.body()?.let { secretary ->
-                        val fio = secretary.full_name
-                        // Передаем ФИО секретаря в MainActivity
-                        val intent = Intent(this@LoginActivity, MainActivity::class.java).apply {
-                            putExtra("secretaryName", fio)
-                        }
-                        startActivity(intent)
-                        finish() // Закрываем LoginActivity
-                    } ?: showToast("Ответ пустой")
-                } else {
-                    showToast("Ошибка авторизации: ${response.code()}")
-                }
-            }
-
-            override fun onFailure(call: Call<SecretaryResponse>, t: Throwable) {
-                showToast("Ошибка: ${t.message}")
-            }
-        })
-    }
-
-    private fun showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }
-}*/
-
+/*
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var editTextLogin: EditText
@@ -241,5 +184,17 @@ class LoginActivity : AppCompatActivity() {
 
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+}*/
+
+class LoginActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_login)
+
+        val buttonBitrixLogin = findViewById<Button>(R.id.buttonBitrixLogin)
+        buttonBitrixLogin.setOnClickListener {
+            startActivity(Intent(this, BitrixAuthActivity::class.java))
+        }
     }
 }

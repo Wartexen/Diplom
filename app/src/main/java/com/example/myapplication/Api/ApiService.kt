@@ -1,4 +1,5 @@
 package com.example.myapplication.Api
+import com.example.myapplication.Models.BitrixAuthResponse
 import com.example.myapplication.Models.Commission
 import com.example.myapplication.Models.CommissionScheduleRequest
 import com.example.myapplication.Models.DefenseSchedule
@@ -68,5 +69,8 @@ interface ApiService {
 
     @GET("api/defenses/today/")//+
     fun getTodayDefensesBySpecialization(@Query("specialization_id") commissionId: Int, @Query("date") date: String): Call<List<DefenseSchedule>>
+
+    @GET("auth/bitrix/")
+    fun authenticateWithBitrix(@Query("code") code: String): Call<BitrixAuthResponse>
 
 }
