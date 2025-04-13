@@ -3,5 +3,6 @@
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">int.istu.edu</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain> <!-- Для эмулятора -->
     </domain-config>
 </network-security-config>

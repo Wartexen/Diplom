@@ -72,6 +72,4 @@ interface ApiService {
     @GET("api/defenses/today/")//+
     fun getTodayDefensesBySpecialization(@Query("specialization_id") commissionId: Int, @Query("date") date: String): Call<List<DefenseSchedule>>
 
-    @POST("api/users/authorize_member/")
-    fun getSecretaryId(@Body request: SecretaryRequest): Call<SecretaryIdResponse>
 }

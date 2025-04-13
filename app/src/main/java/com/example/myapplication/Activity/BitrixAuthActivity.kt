@@ -18,6 +18,8 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.myapplication.Api.ApiService
+import com.example.myapplication.Models.SecretaryIdResponse
 import com.example.myapplication.R
 import okhttp3.Call
 import okhttp3.Callback
@@ -26,6 +28,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONObject
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.io.IOException
 import java.net.URLEncoder
 
@@ -46,13 +50,22 @@ class BitrixAuthActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private val client = OkHttpClient()
+    private lateinit var apiService: ApiService
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bitrix_auth)
 
-        // Включаем отладку WebView
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl("http://10.0.2.2:8000/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        apiService = retrofit.create(ApiService::class.java)
+
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             WebView.setWebContentsDebuggingEnabled(true)
         }
@@ -60,7 +73,7 @@ class BitrixAuthActivity : AppCompatActivity() {
         webView = findViewById(R.id.webView)
         setupWebView()
 
-        // Формируем URL для авторизации
+
         val authUrl = buildAuthUrl()
         Log.d(TAG, "Starting auth with URL: $authUrl")
         webView.loadUrl(authUrl)
@@ -139,7 +152,7 @@ class BitrixAuthActivity : AppCompatActivity() {
 
             override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler, error: SslError?) {
                 Log.w(TAG, "SSL Error: ${error?.toString()}")
-                // Только для тестирования! В продакшене обрабатывайте ошибки правильно
+                // Только для тестирования!
                 handler.proceed()
             }
         }
@@ -245,11 +258,16 @@ class BitrixAuthActivity : AppCompatActivity() {
                     val json = JSONObject(responseBody)
                     val result = json.getJSONObject("result")
 
-                    Log.d(TAG, "User info received: ${result.toString()}")
-                    saveUserData(result)
-                    runOnUiThread {
-                        finishWithSuccess()
-                    }
+                    // Сохраняем данные пользователя
+                   // saveUserData(result)
+
+                    val name = result.optString("name", "")
+                    val lastName = result.optString("last_name", "")
+                    val secondName = result.optString("second_name", "")
+
+
+                    getSecretaryId(apiService, lastName, name, secondName)
+
                 } catch (e: Exception) {
                     Log.e(TAG, "Error processing user info", e)
                     runOnUiThread {
@@ -260,7 +278,7 @@ class BitrixAuthActivity : AppCompatActivity() {
         })
     }
 
-    private fun saveUserData(userJson: JSONObject) {
+    /*private fun saveUserData(userJson: JSONObject) {
         try {
             val sharedPref = getSharedPreferences("BitrixAuth", Context.MODE_PRIVATE)
             with(sharedPref.edit()) {
@@ -278,7 +296,7 @@ class BitrixAuthActivity : AppCompatActivity() {
             Log.e(TAG, "Failed to save user data", e)
             throw e
         }
-    }
+    }*/
 
     private fun finishWithSuccess() {
         Log.d(TAG, "Auth completed successfully")
@@ -292,5 +310,57 @@ class BitrixAuthActivity : AppCompatActivity() {
         resultIntent.putExtra("error", message)
         setResult(RESULT_CANCELED, resultIntent)
         finish()
+    }
+    private fun getSecretaryId(apiService: ApiService, surname: String, name: String, patronymic: String) {
+        val requestBody = mapOf(
+            "surname" to surname,
+            "name" to name,
+            "patronymic" to patronymic
+        )
+
+        apiService.getSecretaryId(requestBody).enqueue(object : retrofit2.Callback<SecretaryIdResponse> {
+            override fun onResponse(
+                call: retrofit2.Call<SecretaryIdResponse>,
+                response: retrofit2.Response<SecretaryIdResponse>
+            ) {
+                if (response.isSuccessful) {
+                    response.body()?.let { secretaryIdResponse ->
+                        val secretaryId = secretaryIdResponse.id
+
+                        // Сохраняем данные в SharedPreferences
+                       /* val prefs = getSharedPreferences("BitrixAuth", Context.MODE_PRIVATE)
+                        with(prefs.edit()) {
+                            putInt("secretaryId", secretaryId)
+                            apply()
+                        }*/
+
+
+                        val intent = Intent(this@BitrixAuthActivity, MainActivity::class.java).apply {
+                            putExtra("secretaryId", secretaryId)
+                           // putExtra("email", prefs.getString("email", ""))
+                            putExtra("fullName", "$surname $name $patronymic")
+                        }
+                        startActivity(intent)
+                        finish()
+                    } ?: run {
+                        showToast("Пустой ответ сервера")
+                        finishWithError("Empty response from server")
+                    }
+                } else {
+                    showToast("Ошибка сервера: ${response.code()}")
+                    finishWithError("Server error: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: retrofit2.Call<SecretaryIdResponse>, t: Throwable) {
+                showToast("Ошибка сети: ${t.message}")
+                finishWithError("Network error: ${t.message}")
+            }
+        })
+    }
+    private fun showToast(message: String) {
+        runOnUiThread {
+            Toast.makeText(this@BitrixAuthActivity, message, Toast.LENGTH_LONG).show()
+        }
     }
 }
