@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.example.myapplication.Adapter
 
 import android.app.AlertDialog
 import android.content.Context
@@ -8,10 +8,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.Models.Question
+import com.example.myapplication.R
 
 class QuestionAdapter(val questions: MutableList<Question>) :
     RecyclerView.Adapter<QuestionAdapter.QuestionViewHolder>() {

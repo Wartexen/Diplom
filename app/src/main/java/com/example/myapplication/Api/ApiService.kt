@@ -1,5 +1,5 @@
 package com.example.myapplication.Api
-import com.example.myapplication.BitrixAuthRequest
+import com.example.myapplication.Models.BitrixAuthRequest
 import com.example.myapplication.Models.BitrixAuthResponse
 import com.example.myapplication.Models.Commission
 import com.example.myapplication.Models.CommissionScheduleRequest
@@ -8,12 +8,12 @@ import com.example.myapplication.Models.Project
 import com.example.myapplication.Models.Protocol // ИЗМЕНИТЬ ПОТОМ
 import com.example.myapplication.Models.Question
 import com.example.myapplication.Models.SecretaryIdResponse
+import com.example.myapplication.Models.SecretaryRequest
 import com.example.myapplication.Models.SecretaryResponse
 import com.example.myapplication.Models.Specialization
 import com.example.myapplication.Models.Student
 import com.example.myapplication.Models.UpdateQuestionRequest
 import com.example.myapplication.Models.UploadResponse
-import com.example.myapplication.SecretaryRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import org.w3c.dom.Text
@@ -71,11 +71,6 @@ interface ApiService {
 
     @GET("api/defenses/today/")//+
     fun getTodayDefensesBySpecialization(@Query("specialization_id") commissionId: Int, @Query("date") date: String): Call<List<DefenseSchedule>>
-
-    @GET("auth/bitrix/")
-    fun authenticateWithBitrix(@Query("code") code: String): Call<BitrixAuthResponse>
-    @POST("auth/bitrix/")
-    fun authenticateWithBitrix(@Body request: BitrixAuthRequest): Call<BitrixAuthResponse>
 
     @POST("api/users/authorize_member/")
     fun getSecretaryId(@Body request: SecretaryRequest): Call<SecretaryIdResponse>

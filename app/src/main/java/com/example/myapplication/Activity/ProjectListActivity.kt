@@ -1,5 +1,5 @@
-package com.example.myapplication
-import ProjectAdapter
+package com.example.myapplication.Activity
+import com.example.myapplication.Adapter.ProjectAdapter
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -14,6 +14,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import android.widget.Toast
+import com.example.myapplication.R
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory

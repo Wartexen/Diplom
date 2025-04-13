@@ -1,6 +1,4 @@
 package com.example.myapplication.Models
-
-
 data class BitrixUser(
     val id: Int,
     val email: String,

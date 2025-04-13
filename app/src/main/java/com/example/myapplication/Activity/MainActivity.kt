@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.example.myapplication.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -13,6 +13,7 @@ import com.example.myapplication.Models.Commission
 import com.example.myapplication.Models.CommissionScheduleRequest
 import com.example.myapplication.Models.DefenseSchedule
 import com.example.myapplication.Models.Specialization
+import com.example.myapplication.R
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response

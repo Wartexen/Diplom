@@ -1,11 +1,10 @@
-package com.example.myapplication
+package com.example.myapplication.Activity
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.os.Handler
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -19,7 +18,6 @@ import com.example.myapplication.Api.ApiService
 import com.example.myapplication.Models.Project
 import com.example.myapplication.Models.Question
 import com.example.myapplication.Models.Student
-import com.example.myapplication.Models.UpdateQuestionRequest
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Call
@@ -30,6 +28,10 @@ import com.example.myapplication.Models.UploadResponse
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import android.Manifest
+import com.example.myapplication.Adapter.QuestionAdapter
+import com.example.myapplication.R
+import com.example.myapplication.Adapter.StudentAdapter
+
 /*
 
 class ProjectDetailsActivity : AppCompatActivity() {

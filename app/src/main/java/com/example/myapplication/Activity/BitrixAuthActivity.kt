@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.example.myapplication.Activity
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -9,7 +9,6 @@ import android.net.http.SslError
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.webkit.SslErrorHandler
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
@@ -17,144 +16,9 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.ProgressBar
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-
-/*
-class BitrixAuthActivity : AppCompatActivity() {
-
-    private lateinit var webView: WebView
-    private lateinit var progressBar: ProgressBar
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_bitrix_auth)
-
-        webView = findViewById(R.id.webView)
-        progressBar = findViewById(R.id.progressBar)
-
-        setupWebView()
-        testWebView()
-    }
-
-    private fun setupWebView() {
-        // Включение базовых настроек
-        webView.settings.apply {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            loadWithOverviewMode = true
-            useWideViewPort = true
-            setSupportZoom(true)
-        }
-
-        // Обработка ошибок и загрузки
-        webView.webViewClient = object : WebViewClient() {
-            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                progressBar.visibility = View.VISIBLE
-                Log.d("WebView", "Start loading: $url")
-            }
-
-            override fun onPageFinished(view: WebView?, url: String?) {
-                progressBar.visibility = View.GONE
-                Log.d("WebView", "Finished loading: $url")
-            }
-
-            override fun onReceivedError(
-                view: WebView?,
-                errorCode: Int,
-                description: String?,
-                failingUrl: String?
-            ) {
-                Log.e("WebView", "Error $errorCode: $description\nURL: $failingUrl")
-                showError("Ошибка загрузки: $description")
-            }
-
-            @RequiresApi(Build.VERSION_CODES.M)
-            override fun onReceivedError(
-                view: WebView?,
-                request: WebResourceRequest?,
-                error: WebResourceError?
-            ) {
-                Log.e("WebView", "Error ${error?.errorCode}: ${error?.description}")
-                showError("Ошибка: ${error?.description}")
-            }
-        }
-
-        // Разрешение Mixed Content для API 21+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            webView.settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-        }
-    }
-
-    private fun testWebView() {
-        // Тестовые URL с приоритетами
-        val testUrls = listOf(
-            "https://google.com",         // Самый простой
-            "https://httpbin.org/get",     // API-ответ
-            "https://int.istu.edu"         // Ваш домен
-        )
-
-        // Пробуем загружать по очереди до первого успешного
-        for (url in testUrls) {
-            Log.d("WebViewTest", "Trying to load: $url")
-            try {
-                webView.loadUrl(url)
-                break
-            } catch (e: Exception) {
-                Log.e("WebViewTest", "Failed to load $url: ${e.message}")
-            }
-        }
-    }
-
-    private fun showError(message: String) {
-        runOnUiThread {
-            progressBar.visibility = View.GONE
-            Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-
-            // Показать альтернативный контент
-            webView.loadDataWithBaseURL(
-                null,
-                """<html><body><h1>Ошибка загрузки</h1><p>$message</p></body></html>""",
-                "text/html",
-                "UTF-8",
-                null
-            )
-        }
-    }
-
-    override fun onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            super.onBackPressed()
-        }
-    }
-}
-
-data class AccessTokenResponse(
-    @SerializedName("access_token") val access_token: String,
-    @SerializedName("client_endpoint") val client_endpoint: String,
-    // Другие поля по необходимости
-)
-
-data class UserInfoResponse(
-    @SerializedName("result") val result: UserInfo
-)
-
-data class UserInfo(
-    @SerializedName("id") val id: Int,
-    @SerializedName("email") val email: String,
-    @SerializedName("last_name") val last_name: String,
-    @SerializedName("name") val name: String,
-    @SerializedName("second_name") val second_name: String,
-    @SerializedName("is_teacher") val is_teacher: Boolean,
-    @SerializedName("is_student") val is_student: Boolean,
-    @SerializedName("mira_id") val mira_id: List<String>?
-)*/
-
-import androidx.browser.customtabs.CustomTabsIntent
+import com.example.myapplication.R
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.FormBody
@@ -172,7 +36,7 @@ class BitrixAuthActivity : AppCompatActivity() {
         private const val BITRIX_AUTH_URL = "https://int.istu.edu/oauth/authorize/"
         private const val BITRIX_TOKEN_URL = "https://int.istu.edu/oauth/token/"
         private const val CLIENT_ID = "local.65581f0597f2b3.73164583"
-        private const val CLIENT_SECRET = "9FTLONYzoMlenvIQBm1TUTfRf1x7ZAUtJK948jeyM2mGmvH0z7"
+        private const val CLIENT_SECRET = "9FTLONYzoMlenvlQBm1TUTfRf1x7ZAUtJK948jeyM2mGmvH0z7"
         private const val REDIRECT_URI = "http://localhost:9000/api/accounts/bitrix-auth/"
 
         fun createStartIntent(context: Context): Intent {
@@ -188,6 +52,7 @@ class BitrixAuthActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bitrix_auth)
 
+        // Включаем отладку WebView
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             WebView.setWebContentsDebuggingEnabled(true)
         }
@@ -195,13 +60,17 @@ class BitrixAuthActivity : AppCompatActivity() {
         webView = findViewById(R.id.webView)
         setupWebView()
 
-        val authUrl = "$BITRIX_AUTH_URL?" +
+        // Формируем URL для авторизации
+        val authUrl = buildAuthUrl()
+        Log.d(TAG, "Starting auth with URL: $authUrl")
+        webView.loadUrl(authUrl)
+    }
+
+    private fun buildAuthUrl(): String {
+        return "$BITRIX_AUTH_URL?" +
                 "client_id=$CLIENT_ID&" +
                 "redirect_uri=${URLEncoder.encode(REDIRECT_URI, "UTF-8")}&" +
                 "response_type=code"
-
-        Log.d(TAG, "Starting auth with URL: $authUrl")
-        webView.loadUrl(authUrl)
     }
 
     @SuppressLint("ObsoleteSdkInt")
@@ -263,6 +132,9 @@ class BitrixAuthActivity : AppCompatActivity() {
                 super.onReceivedHttpError(view, request, errorResponse)
                 val errorMsg = "HTTP Error: ${errorResponse?.statusCode} (${request?.url})"
                 Log.e(TAG, errorMsg)
+                runOnUiThread {
+                    Toast.makeText(this@BitrixAuthActivity, errorMsg, Toast.LENGTH_LONG).show()
+                }
             }
 
             override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler, error: SslError?) {
@@ -292,15 +164,17 @@ class BitrixAuthActivity : AppCompatActivity() {
         Log.d(TAG, "Exchanging code for token...")
 
         val requestBody = FormBody.Builder()
-            .add("grant_type", "authorization_code")
-            .add("code", authCode)
-            .add("client_id", CLIENT_ID)
-            .add("client_secret", CLIENT_SECRET)
-            .add("redirect_uri", REDIRECT_URI)
+            .addEncoded("grant_type", "authorization_code")
+            .addEncoded("code", authCode)
+            .addEncoded("client_id", CLIENT_ID)
+            .addEncoded("client_secret", CLIENT_SECRET)
+            .addEncoded("redirect_uri", REDIRECT_URI)
             .build()
 
         val request = Request.Builder()
             .url(BITRIX_TOKEN_URL)
+            .header("Accept", "application/json")
+            .header("Content-Type", "application/x-www-form-urlencoded")
             .post(requestBody)
             .build()
 
@@ -318,7 +192,12 @@ class BitrixAuthActivity : AppCompatActivity() {
                     Log.d(TAG, "Token response: $responseBody")
 
                     if (!response.isSuccessful) {
-                        throw IOException("Unexpected code $response")
+                        val errorMsg = try {
+                            JSONObject(responseBody).getString("error_description")
+                        } catch (e: Exception) {
+                            "Server error (code ${response.code})"
+                        }
+                        throw IOException(errorMsg)
                     }
 
                     val json = JSONObject(responseBody)
