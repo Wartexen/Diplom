@@ -1,5 +1,4 @@
 package com.example.myapplication
-import android.content.Context
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -7,6 +6,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import android.content.Intent
 import android.os.Bundle
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -18,7 +18,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.myapplication.Api.ApiService
 import com.example.myapplication.Models.BitrixAuthResponse
 import com.example.myapplication.Models.SecretaryIdResponse
-import com.example.myapplication.Models.SecretaryResponse
 
 // Замените на реальный package name вашего приложения
 
@@ -187,7 +186,7 @@ class LoginActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }*/
-
+/*
 class LoginActivity : AppCompatActivity() {
     private val AUTH_REQUEST_CODE = 1001
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -223,5 +222,209 @@ class LoginActivity : AppCompatActivity() {
             }
         }
     }
+}*/
+class LoginActivity : AppCompatActivity() {
+   /* private lateinit var editTextLogin: EditText
+    private lateinit var editTextPassword: EditText
+    private lateinit var buttonLogin: Button
+    private lateinit var apiService: ApiService
+    private lateinit var webView: WebView
+    private lateinit var authDialog: AlertDialog
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_login)
+
+        editTextLogin = findViewById(R.id.editTextLogin)
+        editTextPassword = findViewById(R.id.editTextPassword)
+        buttonLogin = findViewById(R.id.buttonBitrixLogin)
+
+
+
+        // Инициализация Retrofit для вашего сервера
+        val retrofit = Retrofit.Builder()
+            .baseUrl("http://10.0.2.2:8000/") // Для эмулятора Android
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        apiService = retrofit.create(ApiService::class.java)
+
+        // Настройка WebView для OAuth авторизации
+        setupWebView()
+
+        buttonLogin.setOnClickListener {
+            startBitrixOAuthFlow()
+        }
+    }
+
+    private fun setupWebView() {
+        webView = WebView(this).apply {
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true // Добавьте эту строку
+            settings.loadWithOverviewMode = true
+            settings.useWideViewPort = true
+
+            webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(
+                    view: WebView,
+                    request: WebResourceRequest
+                ): Boolean {
+                    val url = request.url.toString()
+                    if (url.contains("code=")) {
+                        val code = url.split("code=")[1].split("&")[0]
+                        exchangeCodeForToken(code)
+                        authDialog.dismiss()
+                        return true
+                    }
+                    return false
+                }
+            }
+        }
+    }
+    private fun startBitrixOAuthFlow() {
+        val authUrl = "https://int.istu.edu/oauth/authorize/" +
+                "?client_id=${BuildConfig.BITRIX_CLIENT_ID}" +
+                "&response_type=code" +
+                "&redirect_uri=http://10.0.2.2:8000/auth/bitrix/"
+
+        webView.loadUrl(authUrl)
+        authDialog.show()
+    }
+
+    private fun exchangeCodeForToken(code: String) {
+        // Отправляем код авторизации на ваш сервер
+        val request = BitrixAuthRequest(code = code)
+
+        apiService.authenticateWithBitrix(request).enqueue(object : Callback<BitrixAuthResponse> {
+            override fun onResponse(
+                call: Call<BitrixAuthResponse>,
+                response: Response<BitrixAuthResponse>
+            ) {
+                if (response.isSuccessful) {
+                    response.body()?.let { authResponse ->
+                        // Получаем ФИО пользователя
+                        processUserData(authResponse.user)
+                    } ?: showError("Пустой ответ от сервера")
+                } else {
+                    showError("Ошибка авторизации: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<BitrixAuthResponse>, t: Throwable) {
+                showError("Ошибка сети: ${t.message}")
+            }
+        })
+    }
+
+    private fun processUserData(user: com.example.myapplication.Models.BitrixUser) {
+        // Разбиваем ФИО на составляющие
+        val nameParts = user.full_name.split(" ")
+        if (nameParts.size < 3) {
+            showError("Некорректный формат ФИО")
+            return
+        }
+
+        // Отправляем данные на ваш сервер для получения ID секретаря
+        getSecretaryId(
+            surname = nameParts[0],
+            name = nameParts[1],
+            patronymic = nameParts[2]
+        )
+    }
+
+    private fun getSecretaryId(surname: String, name: String, patronymic: String) {
+        val request = SecretaryRequest(
+            surname = surname,
+            name = name,
+            patronymic = patronymic
+        )
+
+        apiService.getSecretaryId(request).enqueue(object : Callback<SecretaryIdResponse> {
+            override fun onResponse(
+                call: Call<SecretaryIdResponse>,
+                response: Response<SecretaryIdResponse>
+            ) {
+                if (response.isSuccessful) {
+                    response.body()?.let { secretary ->
+                        openMainActivity(
+                            secretaryId = secretary.id,
+                            fullName = secretary.full_name
+                        )
+                    } ?: showError("Пустой ответ от сервера")
+                } else {
+                    showError("Ошибка получения ID: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<SecretaryIdResponse>, t: Throwable) {
+                showError("Ошибка: ${t.message}")
+            }
+        })
+    }
+
+    private fun openMainActivity(secretaryId: Int, fullName: String) {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            putExtra("SECRETARY_ID", secretaryId)
+            putExtra("FULL_NAME", fullName)
+        }
+        startActivity(intent)
+        finish()
+    }
+
+    private fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }*
+    */
+   private lateinit var webView: WebView
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_bitrix_auth)
+
+        webView = findViewById(R.id.webView)
+        webView.settings.javaScriptEnabled = true
+        webView.settings.domStorageEnabled = true
+
+        webView.webViewClient = object : WebViewClient() {
+            override fun onReceivedError(
+                view: WebView,
+                request: WebResourceRequest,
+                error: WebResourceError
+            ) {
+                super.onReceivedError(view, request, error)
+                Toast.makeText(this@LoginActivity, "Ошибка: ${error.description}", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onPageFinished(view: WebView, url: String) {
+                super.onPageFinished(view, url)
+                // Действия после загрузки страницы
+            }
+        }
+
+        webView.loadUrl("https://www.example.com") // Замените на нужный URL
+    }
 }
+
+
+// Модели данных
+data class BitrixAuthRequest(val code: String)
+data class BitrixAuthResponse(val user: BitrixUser)
+data class BitrixUser(
+    val id: Int,
+    val email: String,
+    val full_name: String,
+    val is_teacher: Boolean,
+    val is_student: Boolean
+)
+data class SecretaryRequest(
+    val surname: String,
+    val name: String,
+    val patronymic: String
+)
+data class SecretaryIdResponse(
+    val id: Int,
+    val full_name: String
+)
+
+
 
