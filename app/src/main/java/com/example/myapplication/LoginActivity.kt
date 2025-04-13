@@ -1,4 +1,5 @@
 package com.example.myapplication
+import android.content.Context
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -186,7 +187,7 @@ class LoginActivity : AppCompatActivity() {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }*/
-/*
+
 class LoginActivity : AppCompatActivity() {
     private val AUTH_REQUEST_CODE = 1001
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -222,9 +223,9 @@ class LoginActivity : AppCompatActivity() {
             }
         }
     }
-}*/
+}/*
 class LoginActivity : AppCompatActivity() {
-   /* private lateinit var editTextLogin: EditText
+   private lateinit var editTextLogin: EditText
     private lateinit var editTextPassword: EditText
     private lateinit var buttonLogin: Button
     private lateinit var apiService: ApiService
@@ -373,9 +374,8 @@ class LoginActivity : AppCompatActivity() {
 
     private fun showError(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-    }*
-    */
-   private lateinit var webView: WebView
+    }
+   /*private lateinit var webView: WebView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -402,9 +402,9 @@ class LoginActivity : AppCompatActivity() {
         }
 
         webView.loadUrl("https://www.example.com") // Замените на нужный URL
-    }
+    }*/
 }
-
+*/
 
 // Модели данных
 data class BitrixAuthRequest(val code: String)

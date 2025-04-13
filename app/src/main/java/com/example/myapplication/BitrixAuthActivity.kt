@@ -165,7 +165,6 @@ import org.json.JSONObject
 import java.io.IOException
 import java.net.URLEncoder
 
-
 class BitrixAuthActivity : AppCompatActivity() {
 
     companion object {
@@ -200,11 +199,8 @@ class BitrixAuthActivity : AppCompatActivity() {
                 "client_id=$CLIENT_ID&" +
                 "redirect_uri=${URLEncoder.encode(REDIRECT_URI, "UTF-8")}&" +
                 "response_type=code"
-        val builder = CustomTabsIntent.Builder()
-        val customTabsIntent = builder.build()
-        customTabsIntent.launchUrl(this, Uri.parse(authUrl))
+
         Log.d(TAG, "Starting auth with URL: $authUrl")
-        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
         webView.loadUrl(authUrl)
     }
 
@@ -220,19 +216,14 @@ class BitrixAuthActivity : AppCompatActivity() {
             builtInZoomControls = true
             displayZoomControls = false
         }
-        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+
         webView.webViewClient = object : WebViewClient() {
-            // Для Android 7.0+ (API 24+)
-            override fun shouldOverrideUrlLoading(
-                view: WebView,
-                request: WebResourceRequest
-            ): Boolean {
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val url = request.url.toString()
                 Log.d(TAG, "Processing URL (new): $url")
                 return handleUrl(url)
             }
 
-            // Для старых версий Android
             @Deprecated("Deprecated in API 24")
             override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
                 Log.d(TAG, "Processing URL (old): $url")
@@ -259,11 +250,7 @@ class BitrixAuthActivity : AppCompatActivity() {
                 super.onPageFinished(view, url)
             }
 
-            override fun onReceivedError(
-                view: WebView?,
-                request: WebResourceRequest?,
-                error: WebResourceError?
-            ) {
+            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
                 super.onReceivedError(view, request, error)
                 val errorMsg = "Error: ${error?.description} (${request?.url})"
                 Log.e(TAG, errorMsg)
@@ -272,21 +259,13 @@ class BitrixAuthActivity : AppCompatActivity() {
                 }
             }
 
-            override fun onReceivedHttpError(
-                view: WebView?,
-                request: WebResourceRequest?,
-                errorResponse: WebResourceResponse?
-            ) {
+            override fun onReceivedHttpError(view: WebView?, request: WebResourceRequest?, errorResponse: WebResourceResponse?) {
                 super.onReceivedHttpError(view, request, errorResponse)
                 val errorMsg = "HTTP Error: ${errorResponse?.statusCode} (${request?.url})"
                 Log.e(TAG, errorMsg)
             }
 
-            override fun onReceivedSslError(
-                view: WebView?,
-                handler: SslErrorHandler,
-                error: SslError?
-            ) {
+            override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler, error: SslError?) {
                 Log.w(TAG, "SSL Error: ${error?.toString()}")
                 // Только для тестирования! В продакшене обрабатывайте ошибки правильно
                 handler.proceed()
