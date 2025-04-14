@@ -333,8 +333,8 @@ class MainActivity : AppCompatActivity() {
             finish()
         } else {
             // Устанавливаем имя пользователя в Toolbar
-            val fullName = "S"
-            //val fullName = sharedPref.getString("fullName", "")
+            //val fullName = "S"
+            val fullName = sharedPref.getString("fullName", "")
             findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)?.title = fullName
         }
     }
