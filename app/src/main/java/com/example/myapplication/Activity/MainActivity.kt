@@ -224,7 +224,6 @@ class MainActivity : AppCompatActivity() {
     }
 }
 */
-
 @Suppress("UNREACHABLE_CODE")
 class MainActivity : AppCompatActivity() {
     private lateinit var spinnerDpp: Spinner
@@ -334,7 +333,8 @@ class MainActivity : AppCompatActivity() {
             finish()
         } else {
             // Устанавливаем имя пользователя в Toolbar
-            val fullName = sharedPref.getString("fullName", "")
+            val fullName = "S"
+            //val fullName = sharedPref.getString("fullName", "")
             findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)?.title = fullName
         }
     }

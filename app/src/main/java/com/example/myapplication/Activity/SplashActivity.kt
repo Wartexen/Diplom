@@ -12,7 +12,7 @@ class SplashActivity : AppCompatActivity() {
         // Проверяем статус авторизации
         val sharedPref = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
         val isLoggedIn = sharedPref.getBoolean("isLoggedIn", false)
-
+        //sharedPref.edit().clear().apply()
         // Определяем, куда переходить
         val intent = if (isLoggedIn) {
             Intent(this, MainActivity::class.java).apply {

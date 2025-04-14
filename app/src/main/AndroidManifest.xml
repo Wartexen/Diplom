@@ -19,53 +19,64 @@
         android:theme="@style/Theme.MyApplication"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
-        <activity
-            android:name=".Activity.ProjectDetailsActivity"
-            android:exported="true">
 
-
-        </activity>
-
+        <!-- Splash Screen - точка входа -->
         <activity
             android:name=".Activity.SplashActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".Activity.ProjectListActivity"
-            android:exported="false" />
-
+        <!-- Экран авторизации -->
         <activity
             android:name=".Activity.BitrixAuthActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http"
+                <data
+                    android:scheme="http"
                     android:host="localhost"
                     android:port="9000"
                     android:pathPrefix="/api/accounts/bitrix-auth/" />
             </intent-filter>
         </activity>
 
-
-
-
-        <!--        <activity-->
-        <!--            android:name=".StudentGradingActivity"-->
-        <!--            android:exported="false" />-->
+        <!-- Главный экран -->
         <activity
             android:name=".Activity.MainActivity"
-            android:exported="true">
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="adjustPan">
         </activity>
+
+        <!-- Список проектов -->
+        <activity
+            android:name=".Activity.ProjectListActivity"
+            android:exported="false"
+            android:parentActivityName=".Activity.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".Activity.MainActivity" />
+        </activity>
+
+        <!-- Детали проекта -->
+        <activity
+            android:name=".Activity.ProjectDetailsActivity"
+            android:exported="false"
+            android:parentActivityName=".Activity.ProjectListActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".Activity.ProjectListActivity" />
+        </activity>
+
+
     </application>
 
 </manifest>
