@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Digital Department</string>
     <string name="Def_Projects">Защита проектов</string>
+    <string name="profile_icon_desc">Профиль пользователя</string>
 </resources>

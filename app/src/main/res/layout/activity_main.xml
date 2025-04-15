@@ -1,43 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="#F5F5F5">
-
+    <!-- Toolbar с правильными constraints -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="?attr/actionBarSize"
         android:background="#3A8890"
         android:elevation="4dp"
-        app:titleTextColor="@color/white"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:contentInsetStart="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
+            <!-- Блок профиля -->
+            <LinearLayout
+                android:id="@+id/profileLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp">
+
+                <ImageView
+                    android:id="@+id/profileIcon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_profile"
+                    android:contentDescription="@string/profile_icon_desc"/>
+
+                <TextView
+                    android:id="@+id/userName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    tools:text=" "/>
+            </LinearLayout>
+
+            <!-- Центральный заголовок -->
             <TextView
-                android:id="@+id/toolbarTitle"
+                android:id="@+id/titleText"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:gravity="center"
                 android:textColor="@color/white"
                 android:textSize="18sp"
-                android:fontFamily="sans-serif-medium"/>
+                android:textStyle="bold"
+                android:text="Защита проектов"/>
 
-            <ImageView
-                android:id="@+id/profileIcon"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginEnd="8dp"
-                android:src="@drawable/ic_profile"
-                android:contentDescription="Профиль"/>
+            <!-- Пустой элемент для выравнивания -->
+            <View
+                android:layout_width="48dp"
+                android:layout_height="1dp"/>
         </LinearLayout>
     </androidx.appcompat.widget.Toolbar>
 
