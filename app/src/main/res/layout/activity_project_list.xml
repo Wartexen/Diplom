@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="@android:color/white">
 
     <LinearLayout
@@ -16,23 +16,60 @@
         <!-- Project list with card styling -->
 
         <androidx.appcompat.widget.Toolbar
-
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="74dp"
             android:background="#3A8890"
             android:elevation="4dp"
             app:contentInsetStart="0dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:fontFamily="sans-serif-medium"
-                android:text="Список проектов"
-                android:textColor="#FFFFFF"
-                android:textSize="22sp" />
-        </androidx.appcompat.widget.Toolbar>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center_vertical"
+                android:paddingVertical="8dp">
 
+                <!-- Первая строка: ФИО + иконка -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingStart="16dp">
+
+                    <ImageView
+                        android:id="@+id/profileIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_profile"
+                        android:contentDescription="@string/profile_icon_desc"
+                        app:tint="@color/white" />
+
+                    <TextView
+                        android:id="@+id/userName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        tools:text=" "/>
+                </LinearLayout>
+
+                <!-- Вторая строка: Заголовок -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="4dp"
+                    android:text="Список проектов"/>
+            </LinearLayout>
+        </androidx.appcompat.widget.Toolbar>
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewProjects"
             android:layout_width="match_parent"

@@ -9,9 +9,10 @@
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="0dp"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="wrap_content"
         android:background="#3A8890"
         android:elevation="4dp"
+        android:minHeight="?attr/actionBarSize"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -19,26 +20,26 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingVertical="8dp">
 
-            <!-- Блок профиля -->
+            <!-- Первая строка: ФИО + иконка -->
             <LinearLayout
-                android:id="@+id/profileLayout"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp">
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp">
 
                 <ImageView
                     android:id="@+id/profileIcon"
                     android:layout_width="24dp"
                     android:layout_height="24dp"
                     android:src="@drawable/ic_profile"
-                    android:contentDescription="@string/profile_icon_desc"/>
+                    android:contentDescription="@string/profile_icon_desc"
+                    app:tint="@color/white" />
 
                 <TextView
                     android:id="@+id/userName"
@@ -46,31 +47,25 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:textColor="@color/white"
-                    android:textSize="14sp"
+                    android:textSize="16sp"
                     android:maxLines="1"
                     android:ellipsize="end"
                     tools:text=" "/>
             </LinearLayout>
 
-            <!-- Центральный заголовок -->
+            <!-- Вторая строка: Заголовок -->
             <TextView
                 android:id="@+id/titleText"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:gravity="center"
                 android:textColor="@color/white"
-                android:textSize="18sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
+                android:layout_marginTop="4dp"
                 android:text="Защита проектов"/>
-
-            <!-- Пустой элемент для выравнивания -->
-            <View
-                android:layout_width="48dp"
-                android:layout_height="1dp"/>
         </LinearLayout>
     </androidx.appcompat.widget.Toolbar>
-
     <!-- Spinners card -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/spinnersCard"

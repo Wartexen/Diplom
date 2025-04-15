@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="#F5F5F5">
 
     <androidx.core.widget.NestedScrollView
@@ -15,25 +15,60 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <!-- шапка -->
             <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
+                android:layout_height="wrap_content"
                 android:background="#3A8890"
-                android:elevation="4dp">
+                android:elevation="4dp"
+                android:minHeight="?attr/actionBarSize"
+                android:paddingVertical="8dp">
 
-                <TextView
-                    android:id="@+id/projectNameTextView"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="20sp"
-                    android:textColor="@android:color/white"
-                    android:fontFamily="sans-serif-medium"
-                    android:ellipsize="end"
-                    android:maxLines="1" />
-            </androidx.appcompat.widget.Toolbar>
+                    android:orientation="vertical">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:paddingStart="16dp">
 
-            <!-- боди -->
+                        <ImageView
+                            android:id="@+id/profileIcon"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@drawable/ic_profile"
+                            android:contentDescription="@string/profile_icon_desc"
+                            app:tint="@android:color/white" />
+
+                        <TextView
+                            android:id="@+id/userName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:textColor="@android:color/white"
+                            android:textSize="16sp"
+                            android:maxLines="1"
+                            android:ellipsize="end"
+                            tools:text=" "/>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/projectNameTextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textColor="@android:color/white"
+                        android:textSize="20sp"
+                        android:gravity="center"
+                        android:textStyle="bold"
+                        android:maxLines="5"
+                        android:ellipsize="end"
+                        android:lineSpacingExtra="2dp"/>
+                </LinearLayout>
+            </androidx.appcompat.widget.Toolbar>
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
