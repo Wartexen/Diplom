@@ -1,4 +1,6 @@
 package com.example.myapplication.Api
+import com.example.myapplication.Models.BitrixAuthRequest
+import com.example.myapplication.Models.BitrixAuthResponse
 import com.example.myapplication.Models.Commission
 import com.example.myapplication.Models.CommissionScheduleRequest
 import com.example.myapplication.Models.DefenseSchedule
@@ -8,6 +10,7 @@ import com.example.myapplication.Models.Project
 import com.example.myapplication.Models.Protocol // ИЗМЕНИТЬ ПОТОМ
 import com.example.myapplication.Models.Question
 import com.example.myapplication.Models.SecretaryIdResponse
+import com.example.myapplication.Models.SecretaryRequest
 import com.example.myapplication.Models.SecretaryResponse
 import com.example.myapplication.Models.Specialization
 import com.example.myapplication.Models.Student
