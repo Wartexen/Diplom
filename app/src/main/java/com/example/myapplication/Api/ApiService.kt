@@ -2,6 +2,8 @@ package com.example.myapplication.Api
 import com.example.myapplication.Models.Commission
 import com.example.myapplication.Models.CommissionScheduleRequest
 import com.example.myapplication.Models.DefenseSchedule
+import com.example.myapplication.Models.GradeRequest
+import com.example.myapplication.Models.GradeResponse
 import com.example.myapplication.Models.Project
 import com.example.myapplication.Models.Protocol // ИЗМЕНИТЬ ПОТОМ
 import com.example.myapplication.Models.Question
@@ -28,10 +30,13 @@ import retrofit2.http.Query
 interface ApiService {
     @GET("/api/projects/by_defense_schedule/")//+
     fun getProjectsBydefense_schedule_id(@Query("defense_schedule_id") defense_schedule_id: Int): Call<List<Project>>
+
     @POST("api/defenses/add_commission/")//+
     fun addCommissionToSchedule(@Body request: CommissionScheduleRequest): Call<Void>
+
     @GET("api/projects/students/")//+
     fun getStudentsByProject(@Query("project_id") projectId: Int): Call<List<Student>>
+
     @Multipart
     @POST("api/upload-audio/")//+
     fun uploadAudio(
@@ -69,4 +74,11 @@ interface ApiService {
     @GET("api/defenses/today/")//+
     fun getTodayDefensesBySpecialization(@Query("specialization_id") commissionId: Int, @Query("date") date: String): Call<List<DefenseSchedule>>
 
+    // Получение студентов по расписанию защиты
+    @GET("api/projects/by_defense_schedule/")
+    fun getProjectsByDefenseSchedule(@Query("defense_schedule_id") defenseScheduleId: Int): Call<List<Project>>
+
+    // Отправка оценки студента
+    @POST("api/projects/grade/")
+    fun gradeStudent(@Body gradeRequest: GradeRequest): Call<GradeResponse>
 }

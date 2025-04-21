@@ -2,6 +2,7 @@ package com.example.myapplication
 import ProjectAdapter
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
@@ -61,6 +62,36 @@ class ProjectListActivity : AppCompatActivity() {
         }
 
         val buttonNext = findViewById<Button>(R.id.buttonNext)
+        buttonNext.setOnClickListener {
+            try {
+                // Логирование для отладки
+                Log.d("ProjectListActivity", "Button clicked, preparing intent")
+
+                // Получаем и проверяем данные перед передачей
+                val selectedDpp = selectedDppTextView.text?.toString() ?: ""
+                val selectedCommission = selectedCommissionTextView.text?.toString() ?: ""
+                val selectedDate = selectedDateTextView.text?.toString() ?: ""
+
+                // Проверяем ID расписания
+                val scheduleId = selectedScheduleId ?: -1
+                Log.d("ProjectListActivity", "Selected schedule ID: $scheduleId")
+
+                // Создаем и настраиваем Intent
+                val intent = Intent(this, StudentGradingActivity::class.java)
+                intent.putExtra("selectedDpp", selectedDpp)
+                intent.putExtra("selectedCommission", selectedCommission)
+                intent.putExtra("selectedDate", selectedDate)
+                intent.putExtra("selectedScheduleId", scheduleId)
+
+                // Запускаем активность
+                Log.d("ProjectListActivity", "Starting StudentGradingActivity")
+                startActivity(intent)
+            } catch (e: Exception) {
+                // Логируем ошибку и показываем сообщение пользователю
+                Log.e("ProjectListActivity", "Error starting activity: ${e.message}", e)
+                Toast.makeText(this, "Ошибка: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        }
 //        buttonNext.setOnClickListener {
 //            val intent = Intent(this, StudentGradingActivity::class.java)
 //            intent.putExtra("selectedDpp", selectedDppTextView.text.toString())
@@ -72,7 +103,7 @@ class ProjectListActivity : AppCompatActivity() {
     }
 
     private fun getProjects(apiService: ApiService, defenseScheduleId: Int) {
-        apiService.getProjectsBydefense_schedule_id(defenseScheduleId).enqueue(object : Callback<List<Project>> {
+        apiService.getProjectsByDefenseSchedule(defenseScheduleId).enqueue(object : Callback<List<Project>> {
             override fun onResponse(call: Call<List<Project>>, response: Response<List<Project>>) {
                 if (response.isSuccessful) {
                    response.body()?.let { projects ->

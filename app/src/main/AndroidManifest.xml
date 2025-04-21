@@ -20,17 +20,17 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
+            android:name=".StudentGradingActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ProjectDetailsActivity"
             android:exported="true">
-
-
         </activity>
-
 
         <activity
             android:name=".ProjectListActivity"
             android:exported="false" />
-
 
         <activity
             android:name=".LoginActivity"
