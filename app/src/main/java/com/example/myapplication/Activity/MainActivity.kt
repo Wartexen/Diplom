@@ -91,7 +91,7 @@ class MainActivity : AppCompatActivity() {
                     fetchCommissions(apiService, secretaryId, selectedSpecialization.ID) // Запрос комиссий
                 } else {
                     updateSpinnerCommission(emptyList()) // Очищаем второй спиннер
-                    updateSpinnerDefenseSchedule(emptyList()) // Очищаем третий спиннер
+                    updateSpinnerDefenseSchedule(emptyList())
                 }
             }
 
