@@ -119,13 +119,9 @@ class MainActivity : AppCompatActivity() {
 
         buttonNext.setOnClickListener {
             try {
-                Log.d(TAG, "Button Next clicked")
-
                 val selectedDpp = spinnerDpp.selectedItem?.toString()
                 val selectedCommissionName = spinnerCommission.selectedItem?.toString()
                 val selectedScheduleName = spinnerDefenseSchedule.selectedItem?.toString()
-
-                Log.d(TAG, "Selected values - DPP: $selectedDpp, Commission: $selectedCommissionName, Schedule: $selectedScheduleName")
 
                 if (selectedCommissionName != null && selectedScheduleName != null &&
                     selectedCommissionName != "Выберите комиссию" &&
@@ -133,8 +129,6 @@ class MainActivity : AppCompatActivity() {
 
                     val commissionId = commissionsList.find { it.Name == selectedCommissionName }?.ID
                     selectedScheduleId = defenseSchedulesList.find { formatDate(it.DateTime) == selectedScheduleName }?.ID
-
-                    Log.d(TAG, "Found IDs - Commission ID: $commissionId, Schedule ID: $selectedScheduleId")
 
                     if (commissionId != null && selectedScheduleId != null) {
                         sendCommissionId(apiService, commissionId, selectedScheduleId!!)
@@ -146,19 +140,14 @@ class MainActivity : AppCompatActivity() {
                             putExtra("selectedDate", selectedScheduleName)
                             putExtra("selectedScheduleId", selectedScheduleId)
                         }
-
-                        Log.d(TAG, "Starting ProjectListActivity with extras: DPP=$selectedDpp, Commission=$selectedCommissionName, Date=$selectedScheduleName, ScheduleID=$selectedScheduleId")
                         startActivity(intent)
                     } else {
-                        Log.e(TAG, "Commission ID or Schedule ID is null - Commission ID: $commissionId, Schedule ID: $selectedScheduleId")
                         showToast("Пожалуйста, выберите аттестационную комиссию и расписание")
                     }
                 } else {
-                    Log.e(TAG, "Invalid selection - Commission: $selectedCommissionName, Schedule: $selectedScheduleName")
                     showToast("Пожалуйста, выберите все необходимые параметры")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error starting ProjectListActivity: ${e.message}", e)
                 showToast("Ошибка: ${e.message}")
             }
         }
@@ -332,9 +321,7 @@ class MainActivity : AppCompatActivity() {
         apiService.addCommissionToSchedule(request).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
-                    Log.d(TAG, "Commission successfully added to schedule")
                 } else {
-                    Log.e(TAG, "Error adding commission to schedule: ${response.code()}")
                     showError(response.code())
                 }
             }
