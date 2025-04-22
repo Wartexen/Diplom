@@ -1,8 +1,11 @@
 package com.example.myapplication.Activity
+
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -45,7 +48,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var toolbar: androidx.appcompat.widget.Toolbar
     private lateinit var userName: TextView
     private lateinit var profileIcon: ImageView
+    private val TAG = "MainActivity"
 
+    @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -59,7 +64,7 @@ class MainActivity : AppCompatActivity() {
         // Проверка авторизации
         checkAuthStatus()
 
-        buttonNext = findViewById(R.id.buttonNext)
+        buttonNext = findViewById(R.id.buttonNextt)
         spinnerDpp = findViewById(R.id.spinnerDpp)
         spinnerCommission = findViewById(R.id.spinnerCommission)
         spinnerDefenseSchedule = findViewById(R.id.spinnerDate)
@@ -113,26 +118,48 @@ class MainActivity : AppCompatActivity() {
         }
 
         buttonNext.setOnClickListener {
-            val selectedCommissionName = spinnerCommission.selectedItem?.toString()
-            val selectedScheduleName = spinnerDefenseSchedule.selectedItem?.toString()
+            try {
+                Log.d(TAG, "Button Next clicked")
 
-            if (selectedCommissionName != null && selectedScheduleName != null) {
-                val commissionId = commissionsList.find { it.Name == selectedCommissionName }?.ID
-                selectedScheduleId = defenseSchedulesList.find { formatDate(it.DateTime) == selectedScheduleName }?.ID
+                val selectedDpp = spinnerDpp.selectedItem?.toString()
+                val selectedCommissionName = spinnerCommission.selectedItem?.toString()
+                val selectedScheduleName = spinnerDefenseSchedule.selectedItem?.toString()
 
-                if (commissionId != null && selectedScheduleId != null) {
-                    sendCommissionId(apiService, commissionId, selectedScheduleId!!)
+                Log.d(TAG, "Selected values - DPP: $selectedDpp, Commission: $selectedCommissionName, Schedule: $selectedScheduleName")
 
-                    val intent = Intent(this, ProjectListActivity::class.java).apply {
-                        putExtra("selectedDpp", spinnerDpp.selectedItem?.toString())
-                        putExtra("selectedCommission", selectedCommissionName)
-                        putExtra("selectedDate", selectedScheduleName)
-                        putExtra("selectedScheduleId", selectedScheduleId)
+                if (selectedCommissionName != null && selectedScheduleName != null &&
+                    selectedCommissionName != "Выберите комиссию" &&
+                    selectedScheduleName != "Выберите дату защиты") {
+
+                    val commissionId = commissionsList.find { it.Name == selectedCommissionName }?.ID
+                    selectedScheduleId = defenseSchedulesList.find { formatDate(it.DateTime) == selectedScheduleName }?.ID
+
+                    Log.d(TAG, "Found IDs - Commission ID: $commissionId, Schedule ID: $selectedScheduleId")
+
+                    if (commissionId != null && selectedScheduleId != null) {
+                        sendCommissionId(apiService, commissionId, selectedScheduleId!!)
+
+                        // Создаем Intent с полным путем к классу
+                        val intent = Intent(this, com.example.myapplication.ProjectListActivity::class.java).apply {
+                            putExtra("selectedDpp", selectedDpp)
+                            putExtra("selectedCommission", selectedCommissionName)
+                            putExtra("selectedDate", selectedScheduleName)
+                            putExtra("selectedScheduleId", selectedScheduleId)
+                        }
+
+                        Log.d(TAG, "Starting ProjectListActivity with extras: DPP=$selectedDpp, Commission=$selectedCommissionName, Date=$selectedScheduleName, ScheduleID=$selectedScheduleId")
+                        startActivity(intent)
+                    } else {
+                        Log.e(TAG, "Commission ID or Schedule ID is null - Commission ID: $commissionId, Schedule ID: $selectedScheduleId")
+                        showToast("Пожалуйста, выберите аттестационную комиссию и расписание")
                     }
-                    startActivity(intent)
                 } else {
-                    showToast("Пожалуйста, выберите аттестационную комиссию и расписание")
+                    Log.e(TAG, "Invalid selection - Commission: $selectedCommissionName, Schedule: $selectedScheduleName")
+                    showToast("Пожалуйста, выберите все необходимые параметры")
                 }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error starting ProjectListActivity: ${e.message}", e)
+                showToast("Ошибка: ${e.message}")
             }
         }
     }
@@ -305,13 +332,15 @@ class MainActivity : AppCompatActivity() {
         apiService.addCommissionToSchedule(request).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
-                    // Успешно отправлено
+                    Log.d(TAG, "Commission successfully added to schedule")
                 } else {
+                    Log.e(TAG, "Error adding commission to schedule: ${response.code()}")
                     showError(response.code())
                 }
             }
 
             override fun onFailure(call: Call<Void>, t: Throwable) {
+                Log.e(TAG, "Network error adding commission to schedule: ${t.message}")
                 showToast("Ошибка: ${t.message}")
             }
         })

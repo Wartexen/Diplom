@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.example.myapplication.Activity
 
 import android.os.Bundle
 import android.util.Log
@@ -10,12 +10,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.myapplication.Adapter.StudentGradeAdapter
 import com.example.myapplication.Api.ApiService
 import com.example.myapplication.Models.GradeRequest
 import com.example.myapplication.Models.GradeResponse
 import com.example.myapplication.Models.Project
 import com.example.myapplication.Models.Student
 import com.example.myapplication.Models.StudentGrade
+import com.example.myapplication.R
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -36,52 +38,66 @@ class StudentGradingActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_student_grading)
 
-        val selectedDpp = intent.getStringExtra("selectedDpp") ?: ""
-        val selectedCommission = intent.getStringExtra("selectedCommission") ?: ""
-        val selectedDate = intent.getStringExtra("selectedDate") ?: ""
-        val selectedScheduleId = intent.getIntExtra("selectedScheduleId", -1)
+        Log.d(TAG, "onCreate started")
 
-        Log.d(TAG, "Received data: DPP=$selectedDpp, Commission=$selectedCommission, Date=$selectedDate, ScheduleID=$selectedScheduleId")
+        try {
+            val selectedDpp = intent.getStringExtra("selectedDpp") ?: ""
+            val selectedCommission = intent.getStringExtra("selectedCommission") ?: ""
+            val selectedDate = intent.getStringExtra("selectedDate") ?: ""
+            val selectedScheduleId = intent.getIntExtra("selectedScheduleId", -1)
 
-        findViewById<TextView>(R.id.tvSelectedDpp).text = selectedDpp
-        findViewById<TextView>(R.id.tvSelectedCommission).text = selectedCommission
-        findViewById<TextView>(R.id.tvSelectedDate).text = selectedDate
+            Log.d(TAG, "Received data: DPP=$selectedDpp, Commission=$selectedCommission, Date=$selectedDate, ScheduleID=$selectedScheduleId")
 
-        progressBar = findViewById(R.id.progressBar)
-        progressBar.visibility = View.VISIBLE
+            findViewById<TextView>(R.id.tvSelectedDpp).text = selectedDpp
+            findViewById<TextView>(R.id.tvSelectedCommission).text = selectedCommission
+            findViewById<TextView>(R.id.tvSelectedDate).text = selectedDate
 
-        recyclerView = findViewById(R.id.recyclerViewStudents)
-        recyclerView.layoutManager = LinearLayoutManager(this)
+            progressBar = findViewById(R.id.progressBar)
+            progressBar.visibility = View.VISIBLE
 
-        // Инициализируем Retrofit
-        val retrofit = Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8000/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
+            recyclerView = findViewById(R.id.recyclerViewStudents)
+            recyclerView.layoutManager = LinearLayoutManager(this)
 
-        apiService = retrofit.create(ApiService::class.java)
+            // Инициализируем Retrofit
+            val retrofit = Retrofit.Builder()
+                .baseUrl("http://10.0.2.2:8000/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
 
-        if (selectedScheduleId != -1) {
-            getProjects(apiService, selectedScheduleId)
-        } else {
-            Toast.makeText(this, "Ошибка: ID расписания не найден", Toast.LENGTH_SHORT).show()
-            finish()
-        }
+            apiService = retrofit.create(ApiService::class.java)
 
-        buttonFinish = findViewById(R.id.buttonFinish)
-        buttonFinish.setOnClickListener {
-            if (adapter.areAllStudentsGraded()) {
-                submitGrades()
+            if (selectedScheduleId != -1) {
+                Log.d(TAG, "Getting projects for schedule ID: $selectedScheduleId")
+                getProjects(apiService, selectedScheduleId)
             } else {
-                Toast.makeText(this, "Пожалуйста, оцените всех студентов", Toast.LENGTH_SHORT).show()
+                Log.e(TAG, "Invalid schedule ID: $selectedScheduleId")
+                Toast.makeText(this, "Ошибка: ID расписания не найден", Toast.LENGTH_SHORT).show()
+                finish()
             }
+
+            buttonFinish = findViewById(R.id.buttonFinish)
+            buttonFinish.setOnClickListener {
+                if (::adapter.isInitialized && adapter.areAllStudentsGraded()) {
+                    submitGrades()
+                } else {
+                    Toast.makeText(this, "Пожалуйста, оцените всех студентов", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in onCreate: ${e.message}", e)
+            Toast.makeText(this, "Ошибка при инициализации: ${e.message}", Toast.LENGTH_LONG).show()
+            finish()
         }
     }
 
     private fun getProjects(apiService: ApiService, defenseScheduleId: Int) {
+        Log.d(TAG, "Calling API to get projects for defense schedule ID: $defenseScheduleId")
+
         apiService.getProjectsBydefense_schedule_id(defenseScheduleId).enqueue(object : Callback<List<Project>> {
             override fun onResponse(call: Call<List<Project>>, response: Response<List<Project>>) {
                 if (response.isSuccessful) {
+                    Log.d(TAG, "API call successful, status code: ${response.code()}")
+
                     val projects = response.body() ?: emptyList()
                     Log.d(TAG, "Received ${projects.size} projects")
 
@@ -96,22 +112,24 @@ class StudentGradingActivity : AppCompatActivity() {
                         val projectId = project.ID.toInt()
                         getStudentsByProject(apiService, projectId, project.Title) {
                             loadedProjects++
+                            Log.d(TAG, "Loaded students for project $loadedProjects of ${projects.size}")
 
                             // Если загрузили всех студентов, обновляем UI
                             if (loadedProjects == projects.size) {
+                                Log.d(TAG, "All students loaded, setting up adapter")
                                 setupAdapter()
                             }
                         }
                     }
                 } else {
-
+                    Log.e(TAG, "API call failed, status code: ${response.code()}")
                     progressBar.visibility = View.GONE
                     Toast.makeText(this@StudentGradingActivity, "Ошибка при загрузке проектов: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             }
 
             override fun onFailure(call: Call<List<Project>>, t: Throwable) {
-
+                Log.e(TAG, "API call failed with exception: ${t.message}", t)
                 progressBar.visibility = View.GONE
                 Toast.makeText(this@StudentGradingActivity, "Ошибка сети: ${t.message}", Toast.LENGTH_SHORT).show()
             }
@@ -119,26 +137,26 @@ class StudentGradingActivity : AppCompatActivity() {
     }
 
     private fun getStudentsByProject(apiService: ApiService, projectId: Int, projectTitle: String, callback: () -> Unit) {
+        Log.d(TAG, "Getting students for project ID: $projectId")
+
         apiService.getStudentsByProject(projectId).enqueue(object : Callback<List<Student>> {
             override fun onResponse(call: Call<List<Student>>, response: Response<List<Student>>) {
                 if (response.isSuccessful) {
                     val students = response.body() ?: emptyList()
+
                     Log.d(TAG, "Received ${students.size} students for project ID: $projectId")
 
                     for (student in students) {
+                        studentGrades.add(
+                            StudentGrade(
+                                id = student.ID,
+                                name = "${student.Surname} ${student.Name} ${student.Patronymic}",
+                                projectTitle = projectTitle,
 
-                            studentGrades.add(
-                                StudentGrade(
-                                    id = student.ID,
-                                    name = "${student.Surname} ${student.Name} ${student.Patronymic}",
-                                    projectTitle = projectTitle,
                                 )
-                            )
-                            if (studentGrades.size == students.size) {
-                                callback()
-                            }
-
+                        )
                     }
+                    callback()
                 } else {
                     Log.e(TAG, "Error getting students: ${response.code()}")
                     Toast.makeText(this@StudentGradingActivity, "Ошибка при загрузке студентов: ${response.code()}", Toast.LENGTH_SHORT).show()
@@ -189,7 +207,7 @@ class StudentGradingActivity : AppCompatActivity() {
                 )
                 Log.d(
                     TAG,
-                    "Оценка  ${studentGrade.grade} для стуендта: ${studentGrade.id}"
+                    "Оценка ${studentGrade.grade} для студента: ${studentGrade.id}"
                 )
 
                 // Используем метод API для отправки оценки

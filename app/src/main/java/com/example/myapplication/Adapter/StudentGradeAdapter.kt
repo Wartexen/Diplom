@@ -1,4 +1,4 @@
-package com.example.myapplication
+package com.example.myapplication.Adapter
 
 import android.view.LayoutInflater
 import android.view.View
@@ -9,6 +9,7 @@ import android.widget.Spinner
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.Models.StudentGrade
+import com.example.myapplication.R
 
 class StudentGradeAdapter(private val students: List<StudentGrade>) :
     RecyclerView.Adapter<StudentGradeAdapter.StudentGradeViewHolder>() {

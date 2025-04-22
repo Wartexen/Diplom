@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
@@ -19,35 +20,77 @@
         android:theme="@style/Theme.MyApplication"
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
-        <activity
-            android:name=".StudentGradingActivity"
-            android:exported="false" />
 
+        <!-- Splash Screen - точка входа -->
         <activity
-            android:name=".ProjectDetailsActivity"
-            android:exported="true">
-        </activity>
-
-        <activity
-            android:name=".ProjectListActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".LoginActivity"
-            android:exported="true">
+            android:name=".Activity.SplashActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-<!--        <activity-->
-<!--            android:name=".StudentGradingActivity"-->
-<!--            android:exported="false" />-->
+        <!-- Экран авторизации -->
         <activity
-            android:name=".MainActivity"
-            android:exported="true">
+            android:name=".Activity.BitrixAuthActivity"
+            android:exported="true"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:scheme="http"
+                    android:host="localhost"
+                    android:port="9000"
+                    android:pathPrefix="/api/accounts/bitrix-auth/" />
+            </intent-filter>
         </activity>
+
+        <!-- Главный экран -->
+        <activity
+            android:name=".Activity.MainActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="adjustPan">
+        </activity>
+
+        <!-- Список проектов -->
+        <activity
+            android:name=".ProjectListActivity"
+            android:exported="false"
+            android:parentActivityName=".Activity.MainActivity"
+            tools:ignore="MissingClass">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".Activity.MainActivity" />
+        </activity>
+
+        <!-- Детали проекта -->
+        <activity
+            android:name=".Activity.ProjectDetailsActivity"
+            android:exported="false"
+            android:parentActivityName=".ProjectListActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ProjectListActivity" />
+        </activity>
+
+        <!-- Оценивание студентов -->
+        <activity
+            android:name=".Activity.StudentGradingActivity"
+            android:exported="false"
+            android:parentActivityName=".ProjectListActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ProjectListActivity" />
+        </activity>
+
     </application>
 
 </manifest>
