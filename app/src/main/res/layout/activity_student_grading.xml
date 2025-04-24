@@ -4,14 +4,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5">
+    android:background="#FAFAFA">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="#3A8890"
-        android:elevation="4dp"
+        android:elevation="2dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
@@ -20,173 +20,121 @@
             android:layout_gravity="center"
             android:text="Оценивание студентов"
             android:textColor="#FFFFFF"
-            android:textSize="20sp"
+            android:textSize="24dp"
             android:fontFamily="sans-serif-medium" />
 
+    </androidx.appcompat.widget.Toolbar>
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/filterButton"
-            android:layout_width="wrap_content"
-            android:layout_height="62dp"
-            android:layout_gravity="top|end"
-            android:layout_marginTop="12dp"
-            android:layout_marginEnd="16dp"
-            android:src="@drawable/filter_svgrepo_com"
-            app:backgroundTint="#3A8890"
-            app:borderWidth="0dp"
-            app:elevation="1dp"
-            app:fabSize="mini"
-            app:tint="@android:color/white"
-            app:useCompatPadding="true" />
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/filterCard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        app:cardCornerRadius="6dp"
+        app:cardElevation="2dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
 
-
-        <FrameLayout
-            android:id="@+id/filterLayout"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone"
-            android:background="#80000000"
-            android:clickable="true"
-            android:focusable="true">
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
 
-            <com.google.android.material.card.MaterialCardView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="?actionBarSize"
-                android:layout_marginEnd="16dp"
-                android:layout_marginStart="16dp"
-                android:layout_gravity="top"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="8dp">
+                android:orientation="horizontal"
+                android:layout_marginBottom="6dp">
 
-                <LinearLayout
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ДПП ПП: "
+                    android:textStyle="bold"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvSelectedDpp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:textSize="14sp" />
+            </LinearLayout>
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Фильтр"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:gravity="center"
-                        android:layout_marginBottom="16dp"
-                        android:textColor="#3A8890" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="6dp">
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="ДПП ПП:"
-                        android:textStyle="bold"
-                        android:textColor="#555555"
-                        android:layout_marginTop="8dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Комиссия: "
+                    android:textStyle="bold"
+                    android:textSize="14sp" />
 
-                    <TextView
-                        android:id="@+id/tvSelectedDpp"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textSize="16sp"
-                        android:contentDescription="Выбранное ДПП ПП"
-                        android:textColor="#000000"
-                        android:paddingVertical="4dp" />
+                <TextView
+                    android:id="@+id/tvSelectedCommission"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp" />
+            </LinearLayout>
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="#E0E0E0"
-                        android:layout_marginVertical="8dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Комиссия:"
-                        android:textStyle="bold"
-                        android:textColor="#555555"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Дата: "
+                    android:textStyle="bold"
+                    android:textSize="14sp" />
 
-                    <TextView
-                        android:id="@+id/tvSelectedCommission"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textSize="16sp"
-                        android:contentDescription="Выбранная комиссия"
-                        android:textColor="#000000"
-                        android:paddingVertical="4dp" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="#E0E0E0"
-                        android:layout_marginVertical="8dp" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Дата:"
-                        android:textStyle="bold"
-                        android:textColor="#555555"/>
-
-                    <TextView
-                        android:id="@+id/tvSelectedDate"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textSize="16sp"
-                        android:contentDescription="Выбранная дата"
-                        android:textColor="#000000"
-                        android:paddingVertical="4dp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-        </FrameLayout>
-    </androidx.appcompat.widget.Toolbar>
+                <TextView
+                    android:id="@+id/tvSelectedDate"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/infoCard"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="2dp"
-        app:layout_constraintTop_toBottomOf="@id/toolbar">
-
-    </com.google.android.material.card.MaterialCardView>
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewStudents"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"
-        android:paddingTop="8dp"
-        android:paddingBottom="80dp"
+        android:paddingVertical="8dp"
         android:paddingHorizontal="8dp"
-        app:layout_constraintTop_toBottomOf="@id/infoCard"
+        android:paddingBottom="72dp"
+        app:layout_constraintTop_toBottomOf="@id/filterCard"
         app:layout_constraintBottom_toBottomOf="parent" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/buttonFinish"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="16dp"
         android:text="Завершить"
-        android:textSize="16sp"
-        android:padding="12dp"
-        app:cornerRadius="8dp"
+        android:textSize="14sp"
+        android:padding="10dp"
+        app:cornerRadius="6dp"
         android:backgroundTint="#3A8890"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

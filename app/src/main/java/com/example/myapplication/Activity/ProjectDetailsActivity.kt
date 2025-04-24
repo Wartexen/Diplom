@@ -465,10 +465,10 @@ class ProjectDetailsActivity : AppCompatActivity() {
     private lateinit var profileIcon: ImageView
     private lateinit var sharedPref: SharedPreferences
     private var audioFilePath: String = ""
-    private var recordingTime: Int = 0 // Время записи в секундах
+    private var recordingTime: Int = 0
     private lateinit var recordingRunnable: Runnable
     private val REQUEST_RECORD_AUDIO_PERMISSION = 200
-    private lateinit var questionAdapter: QuestionAdapter // Добавлено для адаптера вопросов
+    private lateinit var questionAdapter: QuestionAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -513,7 +513,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 startRecording()
             }
         }
-
         val fabAddQuestion = findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fabAddQuestion)
         fabAddQuestion.setOnClickListener {
             showAddQuestionDialog()
@@ -548,7 +547,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
             fullName
         }
     }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
         return true
@@ -613,50 +611,25 @@ class ProjectDetailsActivity : AppCompatActivity() {
             }
         })
     }
-//    private fun getStudentsByProject(projectId: Int) {
-//        apiService.getStudentsByProject(projectId).enqueue(object : Callback<List<Student>> {
-//            override fun onResponse(call: Call<List<Student>>, response: Response<List<Student>>) {
-//                if (response.isSuccessful) {
-//                    val students = response.body() ?: emptyList()
-//                    studentsRecyclerView.layoutManager = LinearLayoutManager(this@ProjectDetailsActivity)
-//                    studentsRecyclerView.adapter = StudentAdapter(students)
-//                } else {
-//                    val errorMessage = response.errorBody()?.string() ?: "Неизвестная ошибка"
-//                    Log.e("API Error", errorMessage)
-//                }
-//            }
-//            override fun onFailure(call: Call<List<Student>>, t: Throwable) {
-//                Log.e("Network Error", t.message ?: "Неизвестная ошибка")
-//            }
-//        })
-//    }
-
     private fun sendQuestionsRequest(projectId: Int) {
         apiService.getQuestionsByProject(projectId).enqueue(object : Callback<List<Question>> {
             override fun onResponse(call: Call<List<Question>>, response: Response<List<Question>>) {
                 if (response.isSuccessful) {
                     val questions = response.body() ?: emptyList()
                     questionAdapter = QuestionAdapter(questions.toMutableList())
-
-                    // Колбэк для удаления
                     questionAdapter.setOnQuestionDeleteListener { question ->
                         deleteQuestionOnServer(question)
                     }
-
                     questionAdapter.setOnQuestionSaveListener { question, newText ->
                         updateQuestionOnServer(question.ID, newText)
                     }
-
                     questionsRecyclerView.layoutManager = LinearLayoutManager(this@ProjectDetailsActivity)
                     questionsRecyclerView.adapter = questionAdapter
-
                 } else {
                     val errorMessage = response.errorBody()?.string() ?: "Неизвестная ошибка"
-                    Log.e("API Error", errorMessage)
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка при получении вопросов", Toast.LENGTH_SHORT).show()
                 }
             }
-
             override fun onFailure(call: Call<List<Question>>, t: Throwable) {
                 Log.e("Network Error", t.message ?: "Неизвестная ошибка")
                 Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети", Toast.LENGTH_SHORT).show()
@@ -760,42 +733,32 @@ class ProjectDetailsActivity : AppCompatActivity() {
     }
 
     private fun updateQuestionOnServer(questionId: Int, newText: String) {
-        Log.d("PROJECT_DETAILS", "Updating question with ID: $questionId, New Text: $newText")
         apiService.updateQuestion(questionId, newText).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                Log.d("PROJECT_DETAILS", "Response code: ${response.code()}")
                 if (response.isSuccessful) {
-                    Log.d("PROJECT_DETAILS", "Question updated successfully")
                     Toast.makeText(this@ProjectDetailsActivity, "Вопрос успешно обновлен", Toast.LENGTH_SHORT).show()
-                    // Обновляем список вопросов
-                    sendQuestionsRequest(project.ID.toInt())
+                    sendQuestionsRequest(project.ID)
                 } else {
                     val errorMessage = response.errorBody()?.string() ?: "Неизвестная ошибка"
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка при обновлении вопроса: $errorMessage", Toast.LENGTH_SHORT).show()
-                    Log.e("API Error", "Failed to update question: $errorMessage")
                 }
             }
 
             override fun onFailure(call: Call<Void>, t: Throwable) {
                 Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при обновлении вопроса", Toast.LENGTH_SHORT).show()
-                Log.e("API Error", "Network error during question update: ${t.message}")
             }
         })
     }
     private fun deleteQuestionOnServer(questionId: Int) {
-        Log.d("PROJECT_DETAILS", "Deleting question with ID: $questionId")
-
         apiService.deleteQuestion(questionId).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
                     Toast.makeText(this@ProjectDetailsActivity, "Вопрос удалён", Toast.LENGTH_SHORT).show()
-                    // Обновляем список вопросов
-                    sendQuestionsRequest(project.ID.toInt())
+                    sendQuestionsRequest(project.ID)
                 } else {
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка удаления", Toast.LENGTH_SHORT).show()
                 }
             }
-
             override fun onFailure(call: Call<Void>, t: Throwable) {
                 Toast.makeText(this@ProjectDetailsActivity, "Сетевая ошибка", Toast.LENGTH_SHORT).show()
             }
@@ -806,24 +769,16 @@ class ProjectDetailsActivity : AppCompatActivity() {
         val dialogView = layoutInflater.inflate(R.layout.dialog_add_question, null)
         val etQuestionText = dialogView.findViewById<EditText>(R.id.etQuestionText)
         val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Добавить вопрос")
-            .setView(dialogView)
-            .setPositiveButton("Добавить") { _, _ ->
+            .setTitle("Добавить вопрос").setView(dialogView).setPositiveButton("Добавить") { _, _ ->
                 val questionText = etQuestionText.text.toString().trim()
-
                 if (questionText.isEmpty()) {
                     Toast.makeText(this, "Текст вопроса не может быть пустым", Toast.LENGTH_SHORT).show()
                     return@setPositiveButton
                 }
-
-                val projectId = project.ID.toInt()
+                val projectId = project.ID
                 val questionRequest = com.example.myapplication.Models.QuestionRequest(questionText, projectId)
-
                 addQuestion(questionRequest)
-            }
-            .setNegativeButton("Отмена", null)
-            .create()
-
+            }.setNegativeButton("Отмена", null).create()
         dialog.show()
     }
 
@@ -834,21 +789,15 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     val newQuestion = response.body()
                     if (newQuestion != null) {
                         Toast.makeText(this@ProjectDetailsActivity, "Вопрос успешно добавлен", Toast.LENGTH_SHORT).show()
-                        // Refresh the questions list to include the new question
-                        sendQuestionsRequest(project.ID.toInt())
+                        sendQuestionsRequest(project.ID)
                     }
                 } else {
-                    val errorMessage = response.errorBody()?.string() ?: "Неизвестная ошибка"
-                    Log.e("API Error", "Error adding question: $errorMessage")
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка при добавлении вопроса", Toast.LENGTH_SHORT).show()
                 }
             }
             override fun onFailure(call: Call<Question>, t: Throwable) {
-                Log.e("Network Error", "Failed to add question: ${t.message}")
                 Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при добавлении вопроса", Toast.LENGTH_SHORT).show()
             }
         })
     }
-
-
 }

@@ -33,21 +33,16 @@ class StudentGradingActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var apiService: ApiService
     private val projectsWithStudents = mutableListOf<ProjectWithStudents>()
-    private val TAG = "StudentGradingActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_student_grading)
-
-        Log.d(TAG, "onCreate started")
 
         try {
             val selectedDpp = intent.getStringExtra("selectedDpp") ?: ""
             val selectedCommission = intent.getStringExtra("selectedCommission") ?: ""
             val selectedDate = intent.getStringExtra("selectedDate") ?: ""
             val selectedScheduleId = intent.getIntExtra("selectedScheduleId", -1)
-
-            Log.d(TAG, "Received data: DPP=$selectedDpp, Commission=$selectedCommission, Date=$selectedDate, ScheduleID=$selectedScheduleId")
 
             findViewById<TextView>(R.id.tvSelectedDpp).text = selectedDpp
             findViewById<TextView>(R.id.tvSelectedCommission).text = selectedCommission
@@ -68,14 +63,11 @@ class StudentGradingActivity : AppCompatActivity() {
             apiService = retrofit.create(ApiService::class.java)
 
             if (selectedScheduleId != -1) {
-                Log.d(TAG, "Getting projects for schedule ID: $selectedScheduleId")
                 getProjects(apiService, selectedScheduleId)
             } else {
-                Log.e(TAG, "Invalid schedule ID: $selectedScheduleId")
                 Toast.makeText(this, "Ошибка: ID расписания не найден", Toast.LENGTH_SHORT).show()
                 finish()
             }
-
             buttonFinish = findViewById(R.id.buttonFinish)
             buttonFinish.setOnClickListener {
                 if (::adapter.isInitialized && adapter.areAllStudentsGraded()) {
@@ -85,23 +77,16 @@ class StudentGradingActivity : AppCompatActivity() {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error in onCreate: ${e.message}", e)
             Toast.makeText(this, "Ошибка при инициализации: ${e.message}", Toast.LENGTH_LONG).show()
             finish()
         }
     }
 
     private fun getProjects(apiService: ApiService, defenseScheduleId: Int) {
-        Log.d(TAG, "Calling API to get projects for defense schedule ID: $defenseScheduleId")
-
         apiService.getProjectsBydefense_schedule_id(defenseScheduleId).enqueue(object : Callback<List<Project>> {
             override fun onResponse(call: Call<List<Project>>, response: Response<List<Project>>) {
                 if (response.isSuccessful) {
-                    Log.d(TAG, "API call successful, status code: ${response.code()}")
-
                     val projects = response.body() ?: emptyList()
-                    Log.d(TAG, "Received ${projects.size} projects")
-
                     if (projects.isEmpty()) {
                         progressBar.visibility = View.GONE
                         Toast.makeText(this@StudentGradingActivity, "Нет проектов для оценивания", Toast.LENGTH_SHORT).show()
@@ -116,38 +101,28 @@ class StudentGradingActivity : AppCompatActivity() {
 
                         getStudentsByProject(apiService, projectId, projectWithStudents) {
                             loadedProjects++
-                            Log.d(TAG, "Loaded students for project $loadedProjects of ${projects.size}")
-
-                            // Если загрузили всех студентов, обновляем UI
                             if (loadedProjects == projects.size) {
-                                Log.d(TAG, "All students loaded, setting up adapter")
                                 setupAdapter()
                             }
                         }
                     }
                 } else {
-                    Log.e(TAG, "API call failed, status code: ${response.code()}")
                     progressBar.visibility = View.GONE
                     Toast.makeText(this@StudentGradingActivity, "Ошибка при загрузке проектов: ${response.code()}", Toast.LENGTH_SHORT).show()
                 }
             }
 
             override fun onFailure(call: Call<List<Project>>, t: Throwable) {
-                Log.e(TAG, "API call failed with exception: ${t.message}", t)
                 progressBar.visibility = View.GONE
                 Toast.makeText(this@StudentGradingActivity, "Ошибка сети: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }
     private fun getStudentsByProject(apiService: ApiService, projectId: Int, projectWithStudents: ProjectWithStudents, callback: () -> Unit) {
-        Log.d(TAG, "Getting students for project ID: $projectId")
-
         apiService.getStudentsByProject(projectId).enqueue(object : Callback<List<Student>> {
             override fun onResponse(call: Call<List<Student>>, response: Response<List<Student>>) {
                 if (response.isSuccessful) {
                     val students = response.body() ?: emptyList()
-                    Log.d(TAG, "Received ${students.size} students for project ID: $projectId")
-
                     for (student in students) {
                         val studentGrade = StudentGrade(
                             id = student.ID,
@@ -159,52 +134,18 @@ class StudentGradingActivity : AppCompatActivity() {
                     }
                     callback()
                 } else {
-                    Log.e(TAG, "Error getting students: ${response.code()}")
                     Toast.makeText(this@StudentGradingActivity, "Ошибка при загрузке студентов: ${response.code()}", Toast.LENGTH_SHORT).show()
                     callback()
                 }
             }
 
             override fun onFailure(call: Call<List<Student>>, t: Throwable) {
-                Log.e(TAG, "Network error getting students: ${t.message}")
                 Toast.makeText(this@StudentGradingActivity, "Ошибка сети: ${t.message}", Toast.LENGTH_SHORT).show()
                 callback()
             }
         })
     }
-//    private fun getStudentsByProject(apiService: ApiService, projectId: Int, projectWithStudents: ProjectWithStudents, callback: () -> Unit) {
-//        Log.d(TAG, "Getting students for project ID: $projectId")
-//
-//        apiService.getStudentsByProject(projectId).enqueue(object : Callback<List<Student>> {
-//            override fun onResponse(call: Call<List<Student>>, response: Response<List<Student>>) {
-//                if (response.isSuccessful) {
-//                    val students = response.body() ?: emptyList()
-//                    Log.d(TAG, "Received ${students.size} students for project ID: $projectId")
-//
-//                    for (student in students) {
-//                        val studentGrade = StudentGrade(
-//                            id = student.ID,
-//                            name = "${student.Surname} ${student.Name} ${student.Patronymic}",
-//                            projectTitle = projectWithStudents.projectTitle,
-////                            groupName = student.GroupName ?: ""
-//                        )
-//                        projectWithStudents.students.add(studentGrade)
-//                    }
-//                    callback()
-//                } else {
-//                    Log.e(TAG, "Error getting students: ${response.code()}")
-//                    Toast.makeText(this@StudentGradingActivity, "Ошибка при загрузке студентов: ${response.code()}", Toast.LENGTH_SHORT).show()
-//                    callback()
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<List<Student>>, t: Throwable) {
-//                Log.e(TAG, "Network error getting students: ${t.message}")
-//                Toast.makeText(this@StudentGradingActivity, "Ошибка сети: ${t.message}", Toast.LENGTH_SHORT).show()
-//                callback()
-//            }
-//        })
-//    }
+
 
     private fun setupAdapter() {
         progressBar.visibility = View.GONE
@@ -239,33 +180,22 @@ class StudentGradingActivity : AppCompatActivity() {
                     student_id = studentGrade.id,
                     grade = studentGrade.grade.toString()
                 )
-                Log.d(
-                    TAG,
-                    "Оценка ${studentGrade.grade} для студента: ${studentGrade.id}"
-                )
-
-                // Используем метод API для отправки оценки
                 apiService.gradeStudent(gradeRequest).enqueue(object : Callback<GradeResponse> {
                     override fun onResponse(call: Call<GradeResponse>, response: Response<GradeResponse>) {
                         submittedCount++
                         if (response.isSuccessful) {
-                            Log.d(TAG, "Оценка сохранена для ${studentGrade.id}")
                         } else {
                             errorCount++
-                            Log.e(TAG, "Ошибка сервера: ${response.code()}")
                         }
                         checkAllGradesSubmitted(submittedCount, errorCount, grades.size)
                     }
-
                     override fun onFailure(call: Call<GradeResponse>, t: Throwable) {
                         submittedCount++
                         errorCount++
-                        Log.e(TAG, "Ошибка: ${t.message}")
                         checkAllGradesSubmitted(submittedCount, errorCount, grades.size)
                     }
                 })
             } catch (e: Exception) {
-                Log.e(TAG, "Ошибка при оценке: ${e.message}")
                 submittedCount++
                 errorCount++
                 checkAllGradesSubmitted(submittedCount, errorCount, grades.size)

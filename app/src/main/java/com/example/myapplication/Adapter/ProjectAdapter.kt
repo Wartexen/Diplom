@@ -33,8 +33,6 @@ class ProjectAdapter(private val projects: List<Project>) :
         val project = projects[position]
         holder.projectName.text = project.Title
         holder.projectDetails.text = "Руководитель: ${project.Supervisor}"
-
-        // Set status indicator and text
         if (project.Status) {
             holder.statusIndicator.setBackgroundResource(R.drawable.status_indicator_ready)
             holder.statusText.text = "Готов"

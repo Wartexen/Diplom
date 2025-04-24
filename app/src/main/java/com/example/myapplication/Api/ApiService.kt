@@ -87,7 +87,6 @@ interface ApiService {
     @GET("api/projects/by_defense_schedule/")
     fun getProjectsByDefenseSchedule(@Query("defense_schedule_id") defenseScheduleId: Int): Call<List<Project>>
 
-    // Отправка оценки студента
     @POST("api/projects/grade/")
     fun gradeStudent(@Body gradeRequest: GradeRequest): Call<GradeResponse>
 
