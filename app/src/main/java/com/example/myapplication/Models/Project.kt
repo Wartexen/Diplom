@@ -2,25 +2,26 @@ package com.example.myapplication.Models
 import android.os.Parcel
 import android.os.Parcelable
 
+
 data class Project(
-    val ID: String,
+    val ID: Int,
     val Title: String,
     val Supervisor: String,
-    val Students: String,
+    val Status: Boolean = false
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
+        parcel.readInt(),
         parcel.readString().toString(),
         parcel.readString().toString(),
-        parcel.readString().toString(),
-        parcel.readString().toString()
+        parcel.readByte() != 0.toByte()
     ) {
     }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeString(ID)
+        parcel.writeInt(ID)
         parcel.writeString(Title)
         parcel.writeString(Supervisor)
-        parcel.writeString(Students)
+        parcel.writeByte(if (Status) 1 else 0)
     }
 
     override fun describeContents(): Int {
@@ -37,5 +38,4 @@ data class Project(
         }
     }
 }
-
 

@@ -5,17 +5,20 @@ import android.os.Parcelable
 
 data class Question(
     val ID: Int,
-    var Text: String
+    var Text: String,
+    val Project_ID: Int
 ): Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
         parcel.readString().toString(),
+        parcel.readInt()
 
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeInt(ID)
         parcel.writeString(Text)
+        parcel.writeInt(Project_ID)
 
     }
 

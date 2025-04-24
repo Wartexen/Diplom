@@ -7,8 +7,10 @@ import com.example.myapplication.Models.DefenseSchedule
 import com.example.myapplication.Models.GradeRequest
 import com.example.myapplication.Models.GradeResponse
 import com.example.myapplication.Models.Project
+import com.example.myapplication.Models.ProjectStatusResponse
 import com.example.myapplication.Models.Protocol // ИЗМЕНИТЬ ПОТОМ
 import com.example.myapplication.Models.Question
+import com.example.myapplication.Models.QuestionRequest
 import com.example.myapplication.Models.SecretaryIdResponse
 import com.example.myapplication.Models.SecretaryRequest
 import com.example.myapplication.Models.SecretaryResponse
@@ -49,21 +51,26 @@ interface ApiService {
 
     @GET("api/questions/by_project/")//+
     fun getQuestionsByProject(@Query("project_id") projectId: Int): Call<List<Question>>
+    @GET("api/questions")
 
-    @POST("api/users/authorize_member/")//+
+
+    @POST("api/users/authorize_member/")
     fun getSecretaryId(@Body requestBody: Map<String, String>): Call<SecretaryIdResponse>
 
 
     @POST("api/users/login/")//+
     fun authenticateUser(@Body requestBody: Map<String, String>): Call<SecretaryResponse>
 
-    @PUT("api/questions/update_question/")//+
+    @POST("api/questions/create_question/")
+    fun createQuestion(@Body request: QuestionRequest): Call<Question>
+
+    @PUT("api/questions/update_question/")
     fun updateQuestion(
         @Query("question_id") questionId: Int,
         @Query("text") text: String
     ): Call<Void>
 
-    @DELETE("api/questions/delete/")//+
+    @DELETE("api/questions/delete/")
     fun deleteQuestion(
         @Query("question_id") questionId: Int
     ): Call<Void>
@@ -77,11 +84,15 @@ interface ApiService {
     @GET("api/defenses/today/")//+
     fun getTodayDefensesBySpecialization(@Query("specialization_id") commissionId: Int, @Query("date") date: String): Call<List<DefenseSchedule>>
 
-    // Получение студентов по расписанию защиты
     @GET("api/projects/by_defense_schedule/")
     fun getProjectsByDefenseSchedule(@Query("defense_schedule_id") defenseScheduleId: Int): Call<List<Project>>
 
     // Отправка оценки студента
     @POST("api/projects/grade/")
     fun gradeStudent(@Body gradeRequest: GradeRequest): Call<GradeResponse>
+
+    @GET("api/projects/project_status")
+    fun getProjectStatus(@Query("project_id") projectId: Int): Call<ProjectStatusResponse>
+
+
 }

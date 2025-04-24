@@ -125,11 +125,11 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp" />
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="#E0E0E0"
-                        android:layout_marginBottom="12dp" />
+<!--                    <View-->
+<!--                        android:layout_width="match_parent"-->
+<!--                        android:layout_height="1dp"-->
+<!--                        android:background="#E0E0E0"-->
+<!--                        android:layout_marginBottom="12dp" />-->
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -145,6 +145,16 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:nestedScrollingEnabled="false" />
+                    <com.google.android.material.floatingactionbutton.FloatingActionButton
+                        android:id="@+id/fabAddQuestion"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom|end"
+                        android:layout_margin="16dp"
+                        android:contentDescription="Добавить вопрос"
+                        app:srcCompat="@android:drawable/ic_input_add" />
+
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

@@ -16,8 +16,9 @@ import com.example.myapplication.R
 class QuestionAdapter(val questions: MutableList<Question>) :
     RecyclerView.Adapter<QuestionAdapter.QuestionViewHolder>() {
     private var onQuestionSave: ((Question, String) -> Unit)? = null
-    //private var onQuestionDelete: ((Question) -> Unit)? = null
     private var onQuestionDelete: ((Int) -> Unit)? = null
+
+
     fun setOnQuestionSaveListener(listener: (Question, String) -> Unit) {
         this.onQuestionSave = listener
     }

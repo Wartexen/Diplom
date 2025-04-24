@@ -33,7 +33,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Группа: "
-                android:textSize="14sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="#555555"/>
 
@@ -45,27 +45,7 @@
                 android:textColor="#333333"/>
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="12dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Проект: "
-                android:textSize="17sp"
-                android:textStyle="bold"
-                android:textColor="#555555"/>
-
-            <TextView
-                android:id="@+id/tvProject"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:textColor="#333333"/>
-        </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

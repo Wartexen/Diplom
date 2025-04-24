@@ -10,11 +10,12 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.myapplication.Adapter.StudentGradeAdapter
+import com.example.myapplication.Adapter.ProjectStudentsAdapter
 import com.example.myapplication.Api.ApiService
 import com.example.myapplication.Models.GradeRequest
 import com.example.myapplication.Models.GradeResponse
 import com.example.myapplication.Models.Project
+import com.example.myapplication.Models.ProjectWithStudents
 import com.example.myapplication.Models.Student
 import com.example.myapplication.Models.StudentGrade
 import com.example.myapplication.R
@@ -27,11 +28,11 @@ import retrofit2.converter.gson.GsonConverterFactory
 class StudentGradingActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
-    private lateinit var adapter: StudentGradeAdapter
+    private lateinit var adapter: ProjectStudentsAdapter
     private lateinit var buttonFinish: Button
     private lateinit var progressBar: ProgressBar
     private lateinit var apiService: ApiService
-    private val studentGrades = mutableListOf<StudentGrade>()
+    private val projectsWithStudents = mutableListOf<ProjectWithStudents>()
     private val TAG = "StudentGradingActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -110,7 +111,10 @@ class StudentGradingActivity : AppCompatActivity() {
                     var loadedProjects = 0
                     for (project in projects) {
                         val projectId = project.ID.toInt()
-                        getStudentsByProject(apiService, projectId, project.Title) {
+                        val projectWithStudents = ProjectWithStudents(project.Title)
+                        projectsWithStudents.add(projectWithStudents)
+
+                        getStudentsByProject(apiService, projectId, projectWithStudents) {
                             loadedProjects++
                             Log.d(TAG, "Loaded students for project $loadedProjects of ${projects.size}")
 
@@ -135,26 +139,23 @@ class StudentGradingActivity : AppCompatActivity() {
             }
         })
     }
-
-    private fun getStudentsByProject(apiService: ApiService, projectId: Int, projectTitle: String, callback: () -> Unit) {
+    private fun getStudentsByProject(apiService: ApiService, projectId: Int, projectWithStudents: ProjectWithStudents, callback: () -> Unit) {
         Log.d(TAG, "Getting students for project ID: $projectId")
 
         apiService.getStudentsByProject(projectId).enqueue(object : Callback<List<Student>> {
             override fun onResponse(call: Call<List<Student>>, response: Response<List<Student>>) {
                 if (response.isSuccessful) {
                     val students = response.body() ?: emptyList()
-
                     Log.d(TAG, "Received ${students.size} students for project ID: $projectId")
 
                     for (student in students) {
-                        studentGrades.add(
-                            StudentGrade(
-                                id = student.ID,
-                                name = "${student.Surname} ${student.Name} ${student.Patronymic}",
-                                projectTitle = projectTitle,
-
-                                )
+                        val studentGrade = StudentGrade(
+                            id = student.ID,
+                            name = "${student.Surname} ${student.Name} ${student.Patronymic}",
+                            projectTitle = projectWithStudents.projectTitle,
+                           // groupName = student.GroupName ?: ""
                         )
+                        projectWithStudents.students.add(studentGrade)
                     }
                     callback()
                 } else {
@@ -171,16 +172,49 @@ class StudentGradingActivity : AppCompatActivity() {
             }
         })
     }
+//    private fun getStudentsByProject(apiService: ApiService, projectId: Int, projectWithStudents: ProjectWithStudents, callback: () -> Unit) {
+//        Log.d(TAG, "Getting students for project ID: $projectId")
+//
+//        apiService.getStudentsByProject(projectId).enqueue(object : Callback<List<Student>> {
+//            override fun onResponse(call: Call<List<Student>>, response: Response<List<Student>>) {
+//                if (response.isSuccessful) {
+//                    val students = response.body() ?: emptyList()
+//                    Log.d(TAG, "Received ${students.size} students for project ID: $projectId")
+//
+//                    for (student in students) {
+//                        val studentGrade = StudentGrade(
+//                            id = student.ID,
+//                            name = "${student.Surname} ${student.Name} ${student.Patronymic}",
+//                            projectTitle = projectWithStudents.projectTitle,
+////                            groupName = student.GroupName ?: ""
+//                        )
+//                        projectWithStudents.students.add(studentGrade)
+//                    }
+//                    callback()
+//                } else {
+//                    Log.e(TAG, "Error getting students: ${response.code()}")
+//                    Toast.makeText(this@StudentGradingActivity, "Ошибка при загрузке студентов: ${response.code()}", Toast.LENGTH_SHORT).show()
+//                    callback()
+//                }
+//            }
+//
+//            override fun onFailure(call: Call<List<Student>>, t: Throwable) {
+//                Log.e(TAG, "Network error getting students: ${t.message}")
+//                Toast.makeText(this@StudentGradingActivity, "Ошибка сети: ${t.message}", Toast.LENGTH_SHORT).show()
+//                callback()
+//            }
+//        })
+//    }
 
     private fun setupAdapter() {
         progressBar.visibility = View.GONE
 
-        if (studentGrades.isEmpty()) {
-            Toast.makeText(this, "Нет студентов для оценивания", Toast.LENGTH_SHORT).show()
+        if (projectsWithStudents.isEmpty()) {
+            Toast.makeText(this, "Нет проектов для оценивания", Toast.LENGTH_SHORT).show()
             return
         }
 
-        adapter = StudentGradeAdapter(studentGrades)
+        adapter = ProjectStudentsAdapter(projectsWithStudents)
         recyclerView.adapter = adapter
     }
 

@@ -16,7 +16,6 @@ class StudentGradeAdapter(private val students: List<StudentGrade>) :
 
     class StudentGradeViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val studentNameTextView: TextView = view.findViewById(R.id.tvStudentName)
-        val projectTextView: TextView = view.findViewById(R.id.tvProject)
         val gradeSpinner: Spinner = view.findViewById(R.id.spinnerGrade)
     }
 
@@ -31,7 +30,6 @@ class StudentGradeAdapter(private val students: List<StudentGrade>) :
 
 
         holder.studentNameTextView.text = student.name
-        holder.projectTextView.text = student.projectTitle
 
 
         val grades = arrayOf("Выберите оценку", "3", "4", "5")
