@@ -6,4 +6,6 @@
     <!-- Status colors -->
     <color name="status_ready">#4CAF50</color>
     <color name="status_not_ready">#F44336</color>
+    <color name="primary_color">#3A8890</color>
+    <color name="primary_color_dark">#3A8890</color>
 </resources>
