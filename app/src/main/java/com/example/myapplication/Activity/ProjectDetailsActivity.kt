@@ -182,13 +182,13 @@ class ProjectDetailsActivity : AppCompatActivity() {
         apiService.setProjectTime(projectTimeRequest).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
-                    Log.d("ProjectDetails", "Defense start time sent successfully")
+                    Log.d("ProjectDetails", " ")
                 } else {
-                    Log.e("ProjectDetails", "Failed to send defense start time: ${response.code()}")
+                    Log.e("ProjectDetails", "${response.code()}")
                 }
             }
             override fun onFailure(call: Call<Void>, t: Throwable) {
-                Log.e("ProjectDetails", "Network error sending defense start time: ${t.message}")
+                Log.e("ProjectDetails", ": ${t.message}")
             }
         })
     }

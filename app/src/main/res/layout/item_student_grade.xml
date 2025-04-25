@@ -15,7 +15,7 @@
         android:padding="16dp">
 
         <TextView
-            android:id="@+id/tvStudentName"
+            android:id="@+id/StudentName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="18sp"
@@ -38,7 +38,7 @@
                 android:textColor="#555555"/>
 
             <TextView
-                android:id="@+id/tvGroup"
+                android:id="@+id/StudentGroup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="14sp"

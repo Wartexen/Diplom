@@ -1,32 +1,24 @@
 package com.example.myapplication.Activity
 
-import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.myapplication.Adapter.ProjectStudentsAdapter
+import com.example.myapplication.Adapter.StudentGradeAdapter
 import com.example.myapplication.Api.ApiService
-import com.example.myapplication.Models.GradeRequest
-import com.example.myapplication.Models.GradeResponse
 import com.example.myapplication.Models.Project
 import com.example.myapplication.Models.ProjectWithStudents
+import com.example.myapplication.Models.Requests.GradeRequest
+import com.example.myapplication.Models.Requests.GradeResponse
 import com.example.myapplication.Models.Student
 import com.example.myapplication.Models.StudentGrade
 import com.example.myapplication.R
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -36,20 +28,16 @@ import retrofit2.converter.gson.GsonConverterFactory
 class StudentGradingActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
-    private lateinit var adapter: ProjectStudentsAdapter
+    private lateinit var adapter: StudentGradeAdapter
     private lateinit var buttonFinish: Button
     private lateinit var progressBar: ProgressBar
     private lateinit var apiService: ApiService
-    private lateinit var sharedPref: SharedPreferences
-    private lateinit var toolbar: androidx.appcompat.widget.Toolbar
-    private lateinit var userName: TextView
-    private lateinit var profileIcon: ImageView
     private val projectsWithStudents = mutableListOf<ProjectWithStudents>()
+    private val TAG = "StudentGradingActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_student_grading)
-
         try {
             val selectedDpp = intent.getStringExtra("selectedDpp") ?: ""
             val selectedCommission = intent.getStringExtra("selectedCommission") ?: ""
@@ -65,14 +53,7 @@ class StudentGradingActivity : AppCompatActivity() {
 
             recyclerView = findViewById(R.id.recyclerViewStudents)
             recyclerView.layoutManager = LinearLayoutManager(this)
-            // Инициализация SharedPreferences
-            sharedPref = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
-            // Инициализация элементов Toolbar
-            toolbar = findViewById(R.id.toolbar)
-            userName = findViewById(R.id.userName)
-            profileIcon = findViewById(R.id.profileIcon)
-            // Проверка авторизации
-            checkAuthStatus()
+
             // Инициализируем Retrofit
             val retrofit = Retrofit.Builder()
                 .baseUrl("http://10.0.2.2:8000/")
@@ -87,6 +68,7 @@ class StudentGradingActivity : AppCompatActivity() {
                 Toast.makeText(this, "Ошибка: ID расписания не найден", Toast.LENGTH_SHORT).show()
                 finish()
             }
+
             buttonFinish = findViewById(R.id.buttonFinish)
             buttonFinish.setOnClickListener {
                 if (::adapter.isInitialized && adapter.areAllStudentsGraded()) {
@@ -117,7 +99,6 @@ class StudentGradingActivity : AppCompatActivity() {
                         val projectId = project.ID.toInt()
                         val projectWithStudents = ProjectWithStudents(project.Title)
                         projectsWithStudents.add(projectWithStudents)
-
                         getStudentsByProject(apiService, projectId, projectWithStudents) {
                             loadedProjects++
                             if (loadedProjects == projects.size) {
@@ -137,17 +118,24 @@ class StudentGradingActivity : AppCompatActivity() {
             }
         })
     }
+
     private fun getStudentsByProject(apiService: ApiService, projectId: Int, projectWithStudents: ProjectWithStudents, callback: () -> Unit) {
         apiService.getStudentsByProject(projectId).enqueue(object : Callback<List<Student>> {
             override fun onResponse(call: Call<List<Student>>, response: Response<List<Student>>) {
                 if (response.isSuccessful) {
                     val students = response.body() ?: emptyList()
                     for (student in students) {
+                        Log.d(TAG, "Student data: ID=${student.ID}, Name=${student.Name}, Surname=${student.Surname}, Patronymic=${student.Patronymic}, GroupName=${student.GroupName}")
+                    }
+
+                    for (student in students) {
+                        val fullName = "${student.Surname ?: ""} ${student.Name ?: ""} ${student.Patronymic ?: ""}"
                         val studentGrade = StudentGrade(
                             id = student.ID,
-                            name = "${student.Surname} ${student.Name} ${student.Patronymic}",
+                            name = fullName,
                             projectTitle = projectWithStudents.projectTitle,
-                           // groupName = student.GroupName ?: ""
+                            grade = "",
+                            groupName = student.GroupName ?: "Группа не указана"
                         )
                         projectWithStudents.students.add(studentGrade)
                     }
@@ -165,7 +153,6 @@ class StudentGradingActivity : AppCompatActivity() {
         })
     }
 
-
     private fun setupAdapter() {
         progressBar.visibility = View.GONE
 
@@ -174,7 +161,7 @@ class StudentGradingActivity : AppCompatActivity() {
             return
         }
 
-        adapter = ProjectStudentsAdapter(projectsWithStudents)
+        adapter = StudentGradeAdapter(projectsWithStudents)
         recyclerView.adapter = adapter
     }
 
@@ -197,24 +184,34 @@ class StudentGradingActivity : AppCompatActivity() {
             try {
                 val gradeRequest = GradeRequest(
                     student_id = studentGrade.id,
-                    grade = studentGrade.grade.toString()
+                    grade = studentGrade.grade
                 )
+                Log.d(
+                    TAG,
+                    "Оценка ${studentGrade.grade} для студента: ${studentGrade.id}"
+                )
+
                 apiService.gradeStudent(gradeRequest).enqueue(object : Callback<GradeResponse> {
                     override fun onResponse(call: Call<GradeResponse>, response: Response<GradeResponse>) {
                         submittedCount++
                         if (response.isSuccessful) {
+                            Log.d(TAG, "Оценка сохранена для ${studentGrade.id}")
                         } else {
                             errorCount++
+                            Log.e(TAG, "Ошибка сервера: ${response.code()}")
                         }
                         checkAllGradesSubmitted(submittedCount, errorCount, grades.size)
                     }
+
                     override fun onFailure(call: Call<GradeResponse>, t: Throwable) {
                         submittedCount++
                         errorCount++
+                        Log.e(TAG, "Ошибка: ${t.message}")
                         checkAllGradesSubmitted(submittedCount, errorCount, grades.size)
                     }
                 })
             } catch (e: Exception) {
+                Log.e(TAG, "Ошибка при оценке: ${e.message}")
                 submittedCount++
                 errorCount++
                 checkAllGradesSubmitted(submittedCount, errorCount, grades.size)
@@ -235,93 +232,6 @@ class StudentGradingActivity : AppCompatActivity() {
                     Toast.makeText(this, "Ошибка при сохранении $errorCount оценок", Toast.LENGTH_SHORT).show()
                 }
             }
-        }
-    }
-    private fun checkAuthStatus() {
-        val isLoggedIn = sharedPref.getBoolean("isLoggedIn", false)
-        if (!isLoggedIn) {
-            startActivity(Intent(this, BitrixAuthActivity::class.java))
-            finish()
-        } else {
-            // Устанавливаем данные пользователя
-            val fullName = sharedPref.getString("fullName", "") ?: ""
-            userName.text = formatUserName(fullName)
-
-            // Обработка клика по иконке профиля
-            profileIcon.setOnClickListener {
-                showProfilePopup(it)
-            }
-        }
-    }
-
-    private fun formatUserName(fullName: String): String {
-        return try {
-            val parts = fullName.split(" ")
-            when {
-                parts.size >= 3 -> "${parts[0]} ${parts[1].first()}.${parts[2].first()}."
-                parts.size == 2 -> "${parts[0]} ${parts[1].first()}."
-                else -> fullName
-            }
-        } catch (e: Exception) {
-            fullName
-        }
-    }
-
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_profile -> {
-                showProfilePopup(findViewById(item.itemId))
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-    private fun showProfilePopup(anchor: View) {
-        val popup = PopupMenu(this, anchor)
-        popup.menuInflater.inflate(R.menu.profile_menu, popup.menu)
-
-        popup.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.menu_logout -> {
-                    showLogoutConfirmation()
-                    true
-                }
-                else -> false
-            }
-        }
-        popup.show()
-    }
-
-    private fun showLogoutConfirmation() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Выход из аккаунта")
-            .setMessage("Вы уверены, что хотите выйти?")
-            .setPositiveButton("Выйти") { _, _ ->
-                logout()
-            }
-            .setNegativeButton("Отмена", null)
-            .show()
-    }
-
-    private fun logout() {
-        sharedPref.edit().clear().apply()
-        val intent = Intent(this, BitrixAuthActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (!sharedPref.getBoolean("isLoggedIn", false)) {
-            logout()
         }
     }
 }
