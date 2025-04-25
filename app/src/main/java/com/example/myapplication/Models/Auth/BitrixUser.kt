@@ -1,4 +1,4 @@
-package com.example.myapplication.Models
+package com.example.myapplication.Models.Auth
 data class BitrixUser(
     val id: Int,
     val email: String,

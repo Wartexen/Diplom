@@ -1,4 +1,4 @@
-package com.example.myapplication.Models
+package com.example.myapplication.Models.Requests
 
 data class QuestionRequest(
     val text: String,

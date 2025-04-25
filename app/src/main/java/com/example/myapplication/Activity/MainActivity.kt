@@ -20,7 +20,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import com.example.myapplication.Api.ApiService
 import com.example.myapplication.Models.Commission
-import com.example.myapplication.Models.CommissionScheduleRequest
+import com.example.myapplication.Models.Requests.CommissionScheduleRequest
 import com.example.myapplication.Models.DefenseSchedule
 import com.example.myapplication.Models.Specialization
 import com.example.myapplication.R

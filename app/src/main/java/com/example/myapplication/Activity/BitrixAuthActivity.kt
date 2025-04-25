@@ -19,7 +19,7 @@ import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.myapplication.Api.ApiService
-import com.example.myapplication.Models.SecretaryIdResponse
+import com.example.myapplication.Models.Auth.SecretaryIdResponse
 import com.example.myapplication.R
 import okhttp3.Call
 import okhttp3.Callback

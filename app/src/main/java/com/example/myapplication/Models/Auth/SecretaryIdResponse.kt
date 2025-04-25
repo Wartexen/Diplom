@@ -1,4 +1,4 @@
-package com.example.myapplication.Models
+package com.example.myapplication.Models.Auth
 
 data class SecretaryIdResponse(
     val id: Int,

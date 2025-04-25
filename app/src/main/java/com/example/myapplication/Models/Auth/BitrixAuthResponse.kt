@@ -1,4 +1,4 @@
-package com.example.myapplication.Models
+package com.example.myapplication.Models.Auth
 
 // Модель для ответа от Bitrix
 data class BitrixAuthResponse(
