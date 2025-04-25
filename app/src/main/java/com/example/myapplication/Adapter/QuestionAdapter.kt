@@ -48,12 +48,9 @@ class QuestionAdapter(val questions: MutableList<Question>) :
         holder.saveButton.setOnClickListener {
             Toast.makeText(holder.itemView.context, "Сохранение...", Toast.LENGTH_SHORT).show()
             val newText = holder.questionEditText.text.toString().trim()
-            Log.d("QUESTION_ADAPTER", "Old text: ${question.Text}, New text: $newText")
             if (newText != question.Text) {
-                Log.d("QUESTION_ADAPTER", "Text changed, triggering callback")
                 val updatedQuestion = question.copy(Text = newText)
                 questions[position] = updatedQuestion
-                Log.d("QUESTION_ADAPTER", "Invoking onQuestionSave with text: $newText")
                 onQuestionSave?.invoke(updatedQuestion, newText)
 
             }
@@ -75,7 +72,6 @@ class QuestionAdapter(val questions: MutableList<Question>) :
             .setTitle("Удалить вопрос?")
             .setMessage("Вопрос будет удалён безвозвратно.")
             .setPositiveButton("Удалить") { _, _ ->
-                // Передаём ID вопроса, а не объект
                 onQuestionDelete?.invoke(questionId)
                 questions.removeAt(position)
                 notifyItemRemoved(position)
@@ -83,8 +79,6 @@ class QuestionAdapter(val questions: MutableList<Question>) :
             .setNegativeButton("Отмена", null)
             .show()
     }
-
-
 
     override fun getItemCount(): Int = questions.size
 }

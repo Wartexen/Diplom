@@ -33,7 +33,6 @@ class StudentGradingActivity : AppCompatActivity() {
     private lateinit var progressBar: ProgressBar
     private lateinit var apiService: ApiService
     private val projectsWithStudents = mutableListOf<ProjectWithStudents>()
-    private val TAG = "StudentGradingActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -125,10 +124,6 @@ class StudentGradingActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val students = response.body() ?: emptyList()
                     for (student in students) {
-                        Log.d(TAG, "Student data: ID=${student.ID}, Name=${student.Name}, Surname=${student.Surname}, Patronymic=${student.Patronymic}, GroupName=${student.GroupName}")
-                    }
-
-                    for (student in students) {
                         val fullName = "${student.Surname ?: ""} ${student.Name ?: ""} ${student.Patronymic ?: ""}"
                         val studentGrade = StudentGrade(
                             id = student.ID,
@@ -186,19 +181,12 @@ class StudentGradingActivity : AppCompatActivity() {
                     student_id = studentGrade.id,
                     grade = studentGrade.grade
                 )
-                Log.d(
-                    TAG,
-                    "Оценка ${studentGrade.grade} для студента: ${studentGrade.id}"
-                )
-
                 apiService.gradeStudent(gradeRequest).enqueue(object : Callback<GradeResponse> {
                     override fun onResponse(call: Call<GradeResponse>, response: Response<GradeResponse>) {
                         submittedCount++
                         if (response.isSuccessful) {
-                            Log.d(TAG, "Оценка сохранена для ${studentGrade.id}")
                         } else {
                             errorCount++
-                            Log.e(TAG, "Ошибка сервера: ${response.code()}")
                         }
                         checkAllGradesSubmitted(submittedCount, errorCount, grades.size)
                     }
@@ -206,12 +194,10 @@ class StudentGradingActivity : AppCompatActivity() {
                     override fun onFailure(call: Call<GradeResponse>, t: Throwable) {
                         submittedCount++
                         errorCount++
-                        Log.e(TAG, "Ошибка: ${t.message}")
                         checkAllGradesSubmitted(submittedCount, errorCount, grades.size)
                     }
                 })
             } catch (e: Exception) {
-                Log.e(TAG, "Ошибка при оценке: ${e.message}")
                 submittedCount++
                 errorCount++
                 checkAllGradesSubmitted(submittedCount, errorCount, grades.size)

@@ -369,7 +369,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 }
             }
             override fun onFailure(call: Call<List<Question>>, t: Throwable) {
-                Log.e("Network Error", t.message ?: "Неизвестная ошибка")
                 Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети", Toast.LENGTH_SHORT).show()
             }
         })

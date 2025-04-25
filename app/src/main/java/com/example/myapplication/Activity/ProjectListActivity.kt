@@ -37,7 +37,6 @@ class ProjectListActivity : AppCompatActivity() {
     private lateinit var toolbar: androidx.appcompat.widget.Toolbar
     private lateinit var userName: TextView
     private lateinit var profileIcon: ImageView
-    private val TAG = "ProjectListActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,10 +71,8 @@ class ProjectListActivity : AppCompatActivity() {
             val apiService = retrofit.create(ApiService::class.java)
 
             if (selectedScheduleId != -1) {
-                Log.d(TAG, "Getting projects for schedule ID: $selectedScheduleId")
                 getProjects(apiService, selectedScheduleId)
             } else {
-                Log.e(TAG, "Invalid schedule ID: $selectedScheduleId")
                 showToast("Ошибка: неверный ID расписания")
             }
 
@@ -103,8 +100,6 @@ class ProjectListActivity : AppCompatActivity() {
                         throw IllegalStateException("Invalid schedule ID: $scheduleId")
                     }
 
-                    Log.d(TAG, "Selected schedule ID: $scheduleId")
-
                     val intent = Intent(this, com.example.myapplication.Activity.StudentGradingActivity::class.java)
                     intent.putExtra("selectedDpp", dpp)
                     intent.putExtra("selectedCommission", commission)
@@ -116,7 +111,6 @@ class ProjectListActivity : AppCompatActivity() {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error in onCreate: ${e.message}", e)
             Toast.makeText(this, "Ошибка при инициализации: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
@@ -126,9 +120,8 @@ class ProjectListActivity : AppCompatActivity() {
             override fun onResponse(call: Call<List<Project>>, response: Response<List<Project>>) {
                 if (response.isSuccessful) {
                     response.body()?.let { projects ->
-                        Log.d(TAG, "Received ${projects.size} projects")
-                        projectsList = projects // Сохраняем проекты в переменной класса
-                        setupRecyclerView(projects) // Настройка RecyclerView после получения данных
+                        projectsList = projects
+                        setupRecyclerView(projects)
                     } ?: run {
                         showToast("Ответ пустой")
                     }
@@ -149,9 +142,7 @@ class ProjectListActivity : AppCompatActivity() {
             recyclerView.layoutManager = LinearLayoutManager(this)
             val adapter = ProjectAdapter(projects)
             recyclerView.adapter = adapter
-
             adapter.onProjectClickListener = { project ->
-                Log.d(TAG, "Project clicked: ${project.Title}")
 
                 val intent = Intent(this, ProjectDetailsActivity::class.java)
                 intent.putExtra("project", project)
@@ -181,11 +172,10 @@ class ProjectListActivity : AppCompatActivity() {
             startActivity(Intent(this, BitrixAuthActivity::class.java))
             finish()
         } else {
-            // Устанавливаем данные пользователя
+
             val fullName = sharedPref.getString("fullName", "") ?: ""
             userName.text = formatUserName(fullName)
 
-            // Обработка клика по иконке профиля
             profileIcon.setOnClickListener {
                 showProfilePopup(it)
             }
@@ -204,7 +194,6 @@ class ProjectListActivity : AppCompatActivity() {
             fullName
         }
     }
-
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
