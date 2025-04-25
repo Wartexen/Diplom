@@ -11,10 +11,6 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- Header with elevation -->
-
-        <!-- Project list with card styling -->
-
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
@@ -80,7 +76,6 @@
             android:paddingBottom="8dp"
             android:paddingHorizontal="8dp" />
 
-        <!-- Button with material styling -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -105,7 +100,6 @@
         </FrameLayout>
     </LinearLayout>
 
-    <!-- Filter FAB with improved styling -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/filterButton"
         android:layout_width="wrap_content"
@@ -121,7 +115,6 @@
         app:tint="@android:color/white"
         app:useCompatPadding="true" />
 
-    <!-- Filter overlay with card styling -->
     <FrameLayout
         android:id="@+id/filterLayout"
         android:layout_width="match_parent"

@@ -1,411 +1,3 @@
-//package com.example.myapplication.Activity
-//
-//import android.Manifest
-//import android.annotation.SuppressLint
-//import android.content.Context
-//import android.content.Intent
-//import android.content.SharedPreferences
-//import android.content.pm.PackageManager
-//import android.media.MediaRecorder
-//import android.net.Uri
-//import android.os.Bundle
-//import android.os.Environment
-//import android.os.Handler
-//import android.os.Looper
-//import android.provider.Settings
-//import android.text.Editable
-//import android.text.TextWatcher
-//import android.util.Log
-//import android.view.Menu
-//import android.view.MenuItem
-//import android.view.View
-//import android.widget.EditText
-//import android.widget.ImageView
-//import android.widget.TextView
-//import android.widget.Toast
-//import androidx.appcompat.app.AppCompatActivity
-//import androidx.appcompat.widget.Toolbar
-//import androidx.core.app.ActivityCompat
-//import androidx.core.content.ContextCompat
-//import androidx.recyclerview.widget.LinearLayoutManager
-//import androidx.recyclerview.widget.RecyclerView
-//import com.bumptech.glide.Glide
-//import com.example.myapplication.Adapter.QuestionAdapter
-//import com.example.myapplication.Adapter.StudentAdapter
-//import com.example.myapplication.Api.ApiService
-//
-//import com.example.myapplication.Models.Project
-//import com.example.myapplication.Models.Question
-//import com.example.myapplication.Models.Student
-//import com.example.myapplication.R
-//import com.google.android.material.floatingactionbutton.FloatingActionButton
-//import retrofit2.Call
-//import retrofit2.Callback
-//import retrofit2.Response
-//import retrofit2.Retrofit
-//import retrofit2.converter.gson.GsonConverterFactory
-//import java.io.File
-//import java.io.IOException
-//import java.text.SimpleDateFormat
-//import java.util.Date
-//import java.util.Locale
-//
-//class ProjectDetailsActivity : AppCompatActivity() {
-//
-//    private lateinit var micButton: FloatingActionButton
-//    private lateinit var recordingTimeTextView: TextView
-//    private lateinit var studentsRecyclerView: RecyclerView
-//    private lateinit var questionsRecyclerView: RecyclerView
-//    private lateinit var apiService: ApiService
-//    private lateinit var project: Project
-//    private var mediaRecorder: MediaRecorder? = null
-//    private var audioFilePath: String? = null
-//    private var isRecording = false
-//    private var recordingStartTime: Long = 0
-//    private val handler = Handler(Looper.getMainLooper())
-//    private lateinit var sharedPref: SharedPreferences
-//    private lateinit var toolbar: Toolbar
-//    private lateinit var userName: TextView
-//    private lateinit var profileIcon: ImageView
-//    private val RECORD_AUDIO_PERMISSION_CODE = 123
-//    private var studentList: List<Student> = emptyList()
-//    private var questionList: List<Question> = emptyList()
-//    private lateinit var studentAdapter: StudentAdapter
-//    private lateinit var questionAdapter: QuestionAdapter
-//
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        setContentView(R.layout.activity_project_details)
-//
-//        micButton = findViewById(R.id.micButton)
-//        recordingTimeTextView = findViewById(R.id.recordingTime)
-//        studentsRecyclerView = findViewById(R.id.studentsRecyclerView)
-//        questionsRecyclerView = findViewById(R.id.questionsRecyclerView)
-//
-//        sharedPref = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
-//        toolbar = findViewById(R.id.toolbar)
-//        userName = findViewById(R.id.userName)
-//        profileIcon = findViewById(R.id.profileIcon)
-//        checkAuthStatus()
-//        // Инициализация Retrofit
-//        val retrofit = Retrofit.Builder()
-//            .baseUrl("http://10.0.2.2:8000/")
-//            .addConverterFactory(GsonConverterFactory.create())
-//            .build()
-//
-//        apiService = retrofit.create(ApiService::class.java)
-//        project = intent.getParcelableExtra<Project>("project") ?: return
-//
-//        findViewById<TextView>(R.id.projectNameTextView).text = project.Title
-//        findViewById<TextView>(R.id.projectLeaderTextView).text = project.Supervisor
-//
-//        val projectIdString = project.ID
-//        val projectId = projectIdString.toIntOrNull()
-//
-//        if (projectId != null) {
-//            getStudentsByProject(projectId)
-//            sendQuestionsRequest(projectId)
-//        } else {
-//            Toast.makeText(this, "Неверный ID проекта", Toast.LENGTH_SHORT).show()
-//        }
-//
-//        micButton.setOnClickListener {
-//            if (isRecording) {
-//                stopRecording()
-//            } else {
-//                startRecording()
-//            }
-//        }
-//
-//        // Add click listener for fabAddQuestion
-//        val fabAddQuestion = findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fabAddQuestion)
-//        fabAddQuestion.setOnClickListener {
-//            showAddQuestionDialog()
-//        }
-//    }
-//
-//    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-//        menuInflater.inflate(R.menu.menu_main, menu)
-//        return true
-//    }
-//
-//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-//        return when (item.itemId) {
-//            R.id.action_logout -> {
-//                logout()
-//                true
-//            }
-//            else -> super.onOptionsItemSelected(item)
-//        }
-//    }
-//
-//    private fun logout() {
-//        val editor = sharedPref.edit()
-//        editor.remove("token")
-//        editor.apply()
-//
-//        val intent = Intent(this, LoginActivity::class.java)
-//        startActivity(intent)
-//        finish()
-//    }
-//
-//    private fun checkAuthStatus() {
-//        val token = sharedPref.getString("token", null)
-//        if (token == null) {
-//            val intent = Intent(this, LoginActivity::class.java)
-//            startActivity(intent)
-//            finish()
-//        } else {
-//            loadUserProfile()
-//        }
-//    }
-//
-//    private fun loadUserProfile() {
-//        val token = sharedPref.getString("token", null)
-//        if (token != null) {
-//            val retrofit = Retrofit.Builder()
-//                .baseUrl("http://10.0.2.2:8000/")
-//                .addConverterFactory(GsonConverterFactory.create())
-//                .build()
-//
-//            val apiService = retrofit.create(ApiService::class.java)
-//            val call = apiService.getUserProfile("Bearer $token")
-//
-//            call.enqueue(object : Callback<com.example.myapplication.Models.User> {
-//                override fun onResponse(call: Call<com.example.myapplication.Models.User>, response: Response<com.example.myapplication.Models.User>) {
-//                    if (response.isSuccessful) {
-//                        val user = response.body()
-//                        userName.text = user?.username ?: "Гость"
-//                        val profileImageUrl = user?.profile_image
-//                        if (profileImageUrl != null) {
-//                            Glide.with(this@ProjectDetailsActivity)
-//                                .load("http://10.0.2.2:8000${profileImageUrl}")
-//                                .placeholder(R.drawable.ic_profile)
-//                                .error(R.drawable.ic_profile)
-//                                .into(profileIcon)
-//                        } else {
-//                            profileIcon.setImageResource(R.drawable.ic_profile)
-//                        }
-//                    } else {
-//                        Toast.makeText(this@ProjectDetailsActivity, "Failed to load profile", Toast.LENGTH_SHORT).show()
-//                    }
-//                }
-//
-//                override fun onFailure(call: Call<com.example.myapplication.Models.User>, t: Throwable) {
-//                    Toast.makeText(this@ProjectDetailsActivity, "Network error: ${t.message}", Toast.LENGTH_SHORT).show()
-//                }
-//            })
-//        }
-//    }
-//
-//    private fun getStudentsByProject(projectId: Int) {
-//        apiService.getStudentsByProject(projectId).enqueue(object : Callback<List<Student>> {
-//            override fun onResponse(call: Call<List<Student>>, response: Response<List<Student>>) {
-//                if (response.isSuccessful) {
-//                    studentList = response.body() ?: emptyList()
-//                    setupStudentsRecyclerView(studentList)
-//                } else {
-//                    Toast.makeText(this@ProjectDetailsActivity, "Failed to load students", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<List<Student>>, t: Throwable) {
-//                Toast.makeText(this@ProjectDetailsActivity, "Network error: ${t.message}", Toast.LENGTH_SHORT).show()
-//            }
-//        })
-//    }
-//
-//    private fun sendQuestionsRequest(projectId: Int) {
-//        apiService.getQuestionsByProject(projectId).enqueue(object : Callback<List<Question>> {
-//            override fun onResponse(call: Call<List<Question>>, response: Response<List<Question>>) {
-//                if (response.isSuccessful) {
-//                    questionList = response.body() ?: emptyList()
-//                    setupQuestionsRecyclerView(questionList)
-//                } else {
-//                    Toast.makeText(this@ProjectDetailsActivity, "Failed to load questions", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<List<Question>>, t: Throwable) {
-//                Toast.makeText(this@ProjectDetailsActivity, "Network error: ${t.message}", Toast.LENGTH_SHORT).show()
-//            }
-//        })
-//    }
-//
-//    private fun setupStudentsRecyclerView(students: List<Student>) {
-//        studentAdapter = StudentAdapter(students)
-//        studentsRecyclerView.apply {
-//            layoutManager = LinearLayoutManager(this@ProjectDetailsActivity)
-//            adapter = studentAdapter
-//        }
-//    }
-//
-//    private fun setupQuestionsRecyclerView(questions: List<Question>) {
-//        questionAdapter = QuestionAdapter(questions)
-//        questionsRecyclerView.apply {
-//            layoutManager = LinearLayoutManager(this@ProjectDetailsActivity)
-//            adapter = questionAdapter
-//        }
-//    }
-//
-//    private fun startRecording() {
-//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-//            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_PERMISSION_CODE)
-//        } else {
-//            startRecordingProcess()
-//        }
-//    }
-//
-//    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-//        if (requestCode == RECORD_AUDIO_PERMISSION_CODE) {
-//            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-//                startRecordingProcess()
-//            } else {
-//                showPermissionDeniedDialog()
-//            }
-//        }
-//    }
-//
-//    private fun showPermissionDeniedDialog() {
-//        androidx.appcompat.app.AlertDialog.Builder(this)
-//            .setTitle("Требуется разрешение")
-//            .setMessage("Для записи аудио необходимо разрешение на использование микрофона. Пожалуйста, предоставьте разрешение в настройках приложения.")
-//            .setPositiveButton("Перейти в настройки") { _, _ ->
-//                openAppSettings()
-//            }
-//            .setNegativeButton("Отмена", null)
-//            .show()
-//    }
-//
-//    private fun openAppSettings() {
-//        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-//        val uri: Uri = Uri.fromParts("package", packageName, null)
-//        intent.data = uri
-//        startActivity(intent)
-//    }
-//
-//    @SuppressLint("SimpleDateFormat")
-//    private fun startRecordingProcess() {
-//        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-//        val audioFileName = "audio_$timeStamp.3gp"
-//        val storageDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC)
-//        val audioFile = File(storageDir, audioFileName)
-//
-//        audioFilePath = audioFile.absolutePath
-//
-//        mediaRecorder = MediaRecorder().apply {
-//            setAudioSource(MediaRecorder.AudioSource.MIC)
-//            setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
-//            setOutputFile(audioFilePath)
-//            setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
-//
-//            try {
-//                prepare()
-//            } catch (e: IOException) {
-//                Log.e("AudioRecord", "prepare() failed: ${e.message}")
-//                Toast.makeText(this@ProjectDetailsActivity, "Ошибка при подготовке записи", Toast.LENGTH_SHORT).show()
-//                return
-//            }
-//
-//            start()
-//            isRecording = true
-//            recordingStartTime = System.currentTimeMillis()
-//            updateRecordingTime()
-//            //micButton.setImageResource(R.drawable.ic_stop)
-//            Toast.makeText(this@ProjectDetailsActivity, "Начало записи", Toast.LENGTH_SHORT).show()
-//        }
-//    }
-//
-//    private fun stopRecording() {
-//        mediaRecorder?.apply {
-//            try {
-//                stop()
-//                release()
-//                Toast.makeText(this@ProjectDetailsActivity, "Запись остановлена. Файл сохранен", Toast.LENGTH_SHORT).show()
-//            } catch (e: RuntimeException) {
-//                Log.e("AudioRecord", "stop() failed: ${e.message}")
-//                Toast.makeText(this@ProjectDetailsActivity, "Ошибка при остановке записи", Toast.LENGTH_SHORT).show()
-//                audioFilePath?.let { File(it).delete() }
-//            } finally {
-//                mediaRecorder = null
-//                isRecording = false
-//                handler.removeCallbacks(updateRecordingTimeRunnable)
-//                //micButton.setImageResource(R.drawable.ic_mic)
-//                recordingTimeTextView.text = "00:00"
-//            }
-//        }
-//    }
-//
-//    private val updateRecordingTimeRunnable = object : Runnable {
-//        override fun run() {
-//            updateRecordingTime()
-//            handler.postDelayed(this, 1000)
-//        }
-//    }
-//
-//    private fun updateRecordingTime() {
-//        val elapsedTime = System.currentTimeMillis() - recordingStartTime
-//        val seconds = (elapsedTime / 1000).toInt()
-//        val minutes = seconds / 60
-//        val displaySeconds = seconds % 60
-//        recordingTimeTextView.text = String.format("%02d:%02d", minutes, displaySeconds)
-//        handler.post(updateRecordingTimeRunnable)
-//    }
-//
-//    // Add method to show dialog for adding a new question
-//    private fun showAddQuestionDialog() {
-//        val dialogView = layoutInflater.inflate(R.layout.dialog_add_question, null)
-//        val etQuestionText = dialogView.findViewById<EditText>(R.id.etQuestionText)
-//
-//        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
-//            .setTitle("Добавить вопрос")
-//            .setView(dialogView)
-//            .setPositiveButton("Добавить") { _, _ ->
-//                val questionText = etQuestionText.text.toString().trim()
-//
-//                if (questionText.isEmpty()) {
-//                    Toast.makeText(this, "Текст вопроса не может быть пустым", Toast.LENGTH_SHORT).show()
-//                    return@setPositiveButton
-//                }
-//
-//                val projectId = project.ID.toInt()
-//                val questionRequest = com.example.myapplication.Models.QuestionRequest(questionText, projectId)
-//
-//                addQuestion(questionRequest)
-//            }
-//            .setNegativeButton("Отмена", null)
-//            .create()
-//
-//        dialog.show()
-//    }
-//
-//    // Add method to send the new question to the server
-//    private fun addQuestion(questionRequest: com.example.myapplication.Models.QuestionRequest) {
-//        apiService.createQuestion(questionRequest).enqueue(object : Callback<Question> {
-//            override fun onResponse(call: Call<Question>, response: Response<Question>) {
-//                if (response.isSuccessful) {
-//                    val newQuestion = response.body()
-//                    if (newQuestion != null) {
-//                        Toast.makeText(this@ProjectDetailsActivity, "Вопрос успешно добавлен", Toast.LENGTH_SHORT).show()
-//                        // Refresh the questions list to include the new question
-//                        sendQuestionsRequest(project.ID.toInt())
-//                    }
-//                } else {
-//                    val errorMessage = response.errorBody()?.string() ?: "Неизвестная ошибка"
-//                    Log.e("API Error", "Error adding question: $errorMessage")
-//                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при добавлении вопроса", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<Question>, t: Throwable) {
-//                Log.e("Network Error", "Failed to add question: ${t.message}")
-//                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при добавлении вопроса", Toast.LENGTH_SHORT).show()
-//            }
-//        })
-//    }
-//}
-
 package com.example.myapplication.Activity
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
@@ -432,7 +24,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import com.example.myapplication.Models.UploadResponse
+import com.example.myapplication.Models.Requests.UploadResponse
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import android.Manifest
@@ -442,33 +34,54 @@ import android.content.SharedPreferences
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Button
 import androidx.appcompat.widget.PopupMenu
 import com.example.myapplication.Adapter.QuestionAdapter
 import com.example.myapplication.R
 import com.example.myapplication.Adapter.StudentAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.EditText
+import com.example.myapplication.Models.Requests.ProjectTimeRequest
+import com.example.myapplication.Models.Requests.QuestionRequest
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.Calendar
 
 class ProjectDetailsActivity : AppCompatActivity() {
+    private lateinit var apiService: ApiService
+
+    private lateinit var questionAdapter: QuestionAdapter
 
     private lateinit var micButton: ImageView
+    private lateinit var profileIcon: ImageView
+    private lateinit var actionMenuButton: ImageView
     private lateinit var recordingTimeTextView: TextView
+    private lateinit var userName: TextView
     private lateinit var studentsRecyclerView: RecyclerView
     private lateinit var questionsRecyclerView: RecyclerView
-    private var isRecording = false
+    private lateinit var startDefenseContainer: View
+    private lateinit var mainContentContainer: View
+
     private val handler = Handler(Looper.getMainLooper())
-    private lateinit var apiService: ApiService
-    private lateinit var project: Project
-    private var mediaRecorder: MediaRecorder? = null
     private lateinit var toolbar: androidx.appcompat.widget.Toolbar
-    private lateinit var userName: TextView
-    private lateinit var profileIcon: ImageView
     private lateinit var sharedPref: SharedPreferences
     private var audioFilePath: String = ""
     private var recordingTime: Int = 0
+    private lateinit var project: Project
     private lateinit var recordingRunnable: Runnable
     private val REQUEST_RECORD_AUDIO_PERMISSION = 200
-    private lateinit var questionAdapter: QuestionAdapter
+
+    private lateinit var btnStartDefense: Button
+    private var mediaRecorder: MediaRecorder? = null
+
+    private var isRecording = false
+    private var defenseStarted = false
+    companion object {
+        private const val PREF_DEFENSE_STARTED = "defense_started_"
+        private const val PREF_DEFENSE_TIME = "defense_time_"
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -478,6 +91,10 @@ class ProjectDetailsActivity : AppCompatActivity() {
         recordingTimeTextView = findViewById(R.id.recordingTime)
         studentsRecyclerView = findViewById(R.id.studentsRecyclerView)
         questionsRecyclerView = findViewById(R.id.questionsRecyclerView)
+        startDefenseContainer = findViewById(R.id.startDefenseContainer)
+        mainContentContainer = findViewById(R.id.mainContentContainer)
+        btnStartDefense = findViewById(R.id.btnStartDefense)
+        actionMenuButton = findViewById(R.id.actionMenuButton)
 
         sharedPref = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
         toolbar = findViewById(R.id.toolbar)
@@ -502,6 +119,18 @@ class ProjectDetailsActivity : AppCompatActivity() {
         if (projectId != null) {
             getStudentsByProject(projectId)
             sendQuestionsRequest(projectId)
+
+            defenseStarted = sharedPref.getBoolean(PREF_DEFENSE_STARTED + projectId, false)
+            if (defenseStarted) {
+                startDefenseContainer.visibility = View.GONE
+                mainContentContainer.visibility = View.VISIBLE
+                actionMenuButton.visibility = View.VISIBLE
+
+                val defenseTime = sharedPref.getString(PREF_DEFENSE_TIME + projectId, "")
+                if (defenseTime?.isNotEmpty() == true) {
+                    Toast.makeText(this, "Защита началась в $defenseTime", Toast.LENGTH_SHORT).show()
+                }
+            }
         } else {
             Toast.makeText(this, "Неверный ID проекта", Toast.LENGTH_SHORT).show()
         }
@@ -518,6 +147,89 @@ class ProjectDetailsActivity : AppCompatActivity() {
             showAddQuestionDialog()
         }
 
+        btnStartDefense.setOnClickListener {
+            startDefense()
+        }
+
+        actionMenuButton.setOnClickListener {
+            showActionMenu(it)
+        }
+    }
+    private fun startDefense() {
+        val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+        MaterialAlertDialogBuilder(this).setTitle("Начать защиту")
+            .setMessage("Вы уверены, что хотите начать защиту проекта? Время начала: $currentTime")
+            .setPositiveButton("Да") { _, _ ->
+                sendDefenseStartTime(currentTime)
+
+                startDefenseContainer.visibility = View.GONE
+                mainContentContainer.visibility = View.VISIBLE
+                actionMenuButton.visibility = View.VISIBLE
+                defenseStarted = true
+                sharedPref.edit().apply {
+                    putBoolean(PREF_DEFENSE_STARTED + project.ID, true)
+                    putString(PREF_DEFENSE_TIME + project.ID, currentTime)
+                    apply()
+                }
+                Toast.makeText(this, "Защита началась в $currentTime", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun sendDefenseStartTime(startTime: String) {
+        val projectTimeRequest = ProjectTimeRequest(project.ID, startTime)
+        apiService.setProjectTime(projectTimeRequest).enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (response.isSuccessful) {
+                    Log.d("ProjectDetails", "Defense start time sent successfully")
+                } else {
+                    Log.e("ProjectDetails", "Failed to send defense start time: ${response.code()}")
+                }
+            }
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Log.e("ProjectDetails", "Network error sending defense start time: ${t.message}")
+            }
+        })
+    }
+    private fun showActionMenu(view: View) {
+        val popup = PopupMenu(this, view)
+        popup.menuInflater.inflate(R.menu.menu_defense, popup.menu)
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_change_time -> {
+                    showChangeTimeDialog()
+                    true
+                }
+                R.id.action_cancel_defense -> {
+                    showCancelDefenseConfirmation()
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
+    private fun showCancelDefenseConfirmation() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Отменить защиту")
+            .setMessage("Вы уверены, что хотите отменить защиту проекта?")
+            .setPositiveButton("Да") { _, _ ->
+                mainContentContainer.visibility = View.GONE
+                startDefenseContainer.visibility = View.VISIBLE
+                actionMenuButton.visibility = View.GONE
+                defenseStarted = false
+                sendDefenseStartTime("00:00:00")
+                sharedPref.edit().apply {
+                    remove(PREF_DEFENSE_STARTED + project.ID)
+                    remove(PREF_DEFENSE_TIME + project.ID)
+                    apply()
+                }
+                Toast.makeText(this, "Защита отменена", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("Нет", null)
+            .show()
     }
 
     private fun checkAuthStatus() {
@@ -534,7 +246,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
             }
         }
     }
-
     private fun formatUserName(fullName: String): String {
         return try {
             val parts = fullName.split(" ")
@@ -591,6 +302,33 @@ class ProjectDetailsActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
+    }
+
+
+    private fun showChangeTimeDialog() {
+        val calendar = Calendar.getInstance()
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        val minute = calendar.get(Calendar.MINUTE)
+        val timePickerDialog = android.app.TimePickerDialog(
+            this,
+            { _, selectedHour, selectedMinute ->
+                val selectedTime = String.format("%02d:%02d:00", selectedHour, selectedMinute)
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Изменить время начала")
+                    .setMessage("Вы уверены, что хотите изменить время начала защиты на $selectedTime?")
+                    .setPositiveButton("Да") { _, _ ->
+                        sendDefenseStartTime(selectedTime)
+                        sharedPref.edit().putString(PREF_DEFENSE_TIME + project.ID, selectedTime).apply()
+                        Toast.makeText(this, "Время начала защиты изменено на $selectedTime", Toast.LENGTH_SHORT).show()
+                    }
+                    .setNegativeButton("Отмена", null)
+                    .show()
+            },
+            hour,
+            minute,
+            true
+        )
+        timePickerDialog.show()
     }
 
     private fun getStudentsByProject(projectId: Int) {
@@ -776,13 +514,12 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     return@setPositiveButton
                 }
                 val projectId = project.ID
-                val questionRequest = com.example.myapplication.Models.QuestionRequest(questionText, projectId)
+                val questionRequest = QuestionRequest(questionText, projectId)
                 addQuestion(questionRequest)
             }.setNegativeButton("Отмена", null).create()
         dialog.show()
     }
-
-    private fun addQuestion(questionRequest: com.example.myapplication.Models.QuestionRequest) {
+    private fun addQuestion(questionRequest: QuestionRequest) {
         apiService.createQuestion(questionRequest).enqueue(object : Callback<Question> {
             override fun onResponse(call: Call<Question>, response: Response<Question>) {
                 if (response.isSuccessful) {
@@ -800,4 +537,5 @@ class ProjectDetailsActivity : AppCompatActivity() {
             }
         })
     }
+
 }

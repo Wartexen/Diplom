@@ -1,26 +1,21 @@
 package com.example.myapplication.Api
-import com.example.myapplication.Models.BitrixAuthRequest
-import com.example.myapplication.Models.BitrixAuthResponse
 import com.example.myapplication.Models.Commission
-import com.example.myapplication.Models.CommissionScheduleRequest
+import com.example.myapplication.Models.Requests.CommissionScheduleRequest
 import com.example.myapplication.Models.DefenseSchedule
-import com.example.myapplication.Models.GradeRequest
-import com.example.myapplication.Models.GradeResponse
+import com.example.myapplication.Models.Requests.GradeRequest
+import com.example.myapplication.Models.Requests.GradeResponse
 import com.example.myapplication.Models.Project
-import com.example.myapplication.Models.ProjectStatusResponse
-import com.example.myapplication.Models.Protocol // ИЗМЕНИТЬ ПОТОМ
+import com.example.myapplication.Models.Requests.ProjectStatusResponse
 import com.example.myapplication.Models.Question
-import com.example.myapplication.Models.QuestionRequest
-import com.example.myapplication.Models.SecretaryIdResponse
-import com.example.myapplication.Models.SecretaryRequest
-import com.example.myapplication.Models.SecretaryResponse
+import com.example.myapplication.Models.Requests.QuestionRequest
+import com.example.myapplication.Models.Auth.SecretaryIdResponse
+import com.example.myapplication.Models.Auth.SecretaryResponse
+import com.example.myapplication.Models.Requests.ProjectTimeRequest
 import com.example.myapplication.Models.Specialization
 import com.example.myapplication.Models.Student
-import com.example.myapplication.Models.UpdateQuestionRequest
-import com.example.myapplication.Models.UploadResponse
+import com.example.myapplication.Models.Requests.UploadResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import org.w3c.dom.Text
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -29,7 +24,6 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
-import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
@@ -90,8 +84,10 @@ interface ApiService {
     @POST("api/projects/grade/")
     fun gradeStudent(@Body gradeRequest: GradeRequest): Call<GradeResponse>
 
-    @GET("api/projects/project_status")
+    @GET("api/projects/project_status/")
     fun getProjectStatus(@Query("project_id") projectId: Int): Call<ProjectStatusResponse>
 
+    @POST("api/projects/project_time/")
+    fun setProjectTime(@Body request: ProjectTimeRequest): Call<Void>
 
 }

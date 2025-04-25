@@ -23,7 +23,6 @@ import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import com.example.myapplication.Activity.BitrixAuthActivity
 import com.example.myapplication.Activity.ProjectDetailsActivity
-import com.example.myapplication.Activity.StudentGradingActivity
 import com.example.myapplication.Adapter.ProjectAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -106,14 +105,11 @@ class ProjectListActivity : AppCompatActivity() {
 
                     Log.d(TAG, "Selected schedule ID: $scheduleId")
 
-                    // Создаем и настраиваем Intent с полным путем к классу
                     val intent = Intent(this, com.example.myapplication.Activity.StudentGradingActivity::class.java)
                     intent.putExtra("selectedDpp", dpp)
                     intent.putExtra("selectedCommission", commission)
                     intent.putExtra("selectedDate", date)
                     intent.putExtra("selectedScheduleId", scheduleId)
-
-                    Log.d(TAG, "Starting StudentGradingActivity")
                     startActivity(intent)
                 } catch (e: Exception) {
                     Toast.makeText(this, "Ошибка: ${e.message}", Toast.LENGTH_LONG).show()
