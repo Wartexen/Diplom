@@ -1,85 +1,87 @@
 package com.example.myapplication.Adapter
 
-import android.app.AlertDialog
-import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
-import android.widget.Toast
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.Models.Question
 import com.example.myapplication.R
 
-class QuestionAdapter(val questions: MutableList<Question>) :
+class QuestionAdapter(private val questions: MutableList<Question>) :
     RecyclerView.Adapter<QuestionAdapter.QuestionViewHolder>() {
-    private var onQuestionSave: ((Question, String) -> Unit)? = null
-    private var onQuestionDelete: ((Int) -> Unit)? = null
 
-
-    fun setOnQuestionSaveListener(listener: (Question, String) -> Unit) {
-        this.onQuestionSave = listener
-    }
+    private var onQuestionDeleteListener: ((Int) -> Unit)? = null
+    private var onQuestionSaveListener: ((Question, String) -> Unit)? = null
 
     fun setOnQuestionDeleteListener(listener: (Int) -> Unit) {
-        this.onQuestionDelete = listener
+        onQuestionDeleteListener = listener
     }
-    inner class QuestionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val questionEditText: EditText = itemView.findViewById(R.id.questionEditText)
-        val saveButton: ImageView = itemView.findViewById(R.id.saveButton)
-        val deleteButton: ImageView = itemView.findViewById(R.id.deleteButton)
 
+    fun setOnQuestionSaveListener(listener: (Question, String) -> Unit) {
+        onQuestionSaveListener = listener
+    }
+
+    class QuestionViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val questionText: TextView = view.findViewById(R.id.questionText)
+        val editButton: ImageView = view.findViewById(R.id.editButton)
+        val deleteButton: ImageView = view.findViewById(R.id.deleteButton)
+        val editQuestionText: EditText = view.findViewById(R.id.editQuestionText)
+        val editButtonsLayout: LinearLayout = view.findViewById(R.id.editButtonsLayout)
+        val cancelButton: Button = view.findViewById(R.id.cancelButton)
+        val saveButton: Button = view.findViewById(R.id.saveButton)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): QuestionViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_question, parent, false)
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_question, parent, false)
         return QuestionViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: QuestionViewHolder, position: Int) {
         val question = questions[position]
-        holder.questionEditText.setText(question.Text)
-        holder.questionEditText.setOnFocusChangeListener { _, hasFocus ->
-            holder.saveButton.visibility = if (hasFocus) View.VISIBLE else View.GONE
-        }
+        holder.questionText.text = question.Text
 
-        holder.saveButton.setOnClickListener {
-            Toast.makeText(holder.itemView.context, "Сохранение...", Toast.LENGTH_SHORT).show()
-            val newText = holder.questionEditText.text.toString().trim()
-            if (newText != question.Text) {
-                val updatedQuestion = question.copy(Text = newText)
-                questions[position] = updatedQuestion
-                onQuestionSave?.invoke(updatedQuestion, newText)
+        holder.editButton.setOnClickListener {
+            holder.questionText.visibility = View.GONE
+            holder.editQuestionText.visibility = View.VISIBLE
+            holder.editButtonsLayout.visibility = View.VISIBLE
+            holder.editButton.visibility = View.GONE
+            holder.deleteButton.visibility = View.GONE
 
-            }
-            holder.saveButton.visibility = View.GONE
-            holder.questionEditText.clearFocus()
+            holder.editQuestionText.setText(question.Text)
+            holder.editQuestionText.requestFocus()
         }
 
         holder.deleteButton.setOnClickListener {
-            showDeleteConfirmationDialog(holder.itemView.context, question.ID, position)
+            onQuestionDeleteListener?.invoke(question.ID)
         }
 
-        holder.questionEditText.setOnFocusChangeListener { _, hasFocus ->
-            holder.saveButton.visibility = if (hasFocus) View.VISIBLE else View.GONE
-            holder.deleteButton.visibility = if (hasFocus) View.VISIBLE else View.GONE
+        holder.cancelButton.setOnClickListener {
+            holder.questionText.visibility = View.VISIBLE
+            holder.editQuestionText.visibility = View.GONE
+            holder.editButtonsLayout.visibility = View.GONE
+            holder.editButton.visibility = View.VISIBLE
+            holder.deleteButton.visibility = View.VISIBLE
         }
-    }
-    private fun showDeleteConfirmationDialog(context: Context, questionId: Int, position: Int) {
-        AlertDialog.Builder(context)
-            .setTitle("Удалить вопрос?")
-            .setMessage("Вопрос будет удалён безвозвратно.")
-            .setPositiveButton("Удалить") { _, _ ->
-                onQuestionDelete?.invoke(questionId)
-                questions.removeAt(position)
-                notifyItemRemoved(position)
+
+        holder.saveButton.setOnClickListener {
+            val newText = holder.editQuestionText.text.toString().trim()
+            if (newText.isNotEmpty()) {
+                onQuestionSaveListener?.invoke(question, newText)
+
+                holder.questionText.visibility = View.VISIBLE
+                holder.editQuestionText.visibility = View.GONE
+                holder.editButtonsLayout.visibility = View.GONE
+                holder.editButton.visibility = View.VISIBLE
+                holder.deleteButton.visibility = View.VISIBLE
             }
-            .setNegativeButton("Отмена", null)
-            .show()
+        }
     }
 
-    override fun getItemCount(): Int = questions.size
+    override fun getItemCount() = questions.size
 }
-
