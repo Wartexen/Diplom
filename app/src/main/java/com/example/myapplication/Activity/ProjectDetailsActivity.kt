@@ -41,6 +41,8 @@ import com.example.myapplication.R
 import com.example.myapplication.Adapter.StudentAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.EditText
+import com.example.myapplication.Models.Requests.ProjectStatusResponse
+import com.example.myapplication.Models.Requests.ProjectStatusUpdateRequest
 import com.example.myapplication.Models.Requests.ProjectTimeRequest
 import com.example.myapplication.Models.Requests.QuestionRequest
 import java.text.SimpleDateFormat
@@ -77,6 +79,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
 
     private var isRecording = false
     private var defenseStarted = false
+    private var projectStatus = false
     companion object {
         private const val PREF_DEFENSE_STARTED = "defense_started_"
         private const val PREF_DEFENSE_TIME = "defense_time_"
@@ -101,7 +104,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
         userName = findViewById(R.id.userName)
         profileIcon = findViewById(R.id.profileIcon)
         checkAuthStatus()
-        // Инициализация Retrofit
         val retrofit = Retrofit.Builder()
             .baseUrl("http://10.0.2.2:8000/")
             .addConverterFactory(GsonConverterFactory.create())
@@ -114,32 +116,20 @@ class ProjectDetailsActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.projectLeaderTextView).text = project.Supervisor
 
         val projectId = project.ID
-        //val projectId = projectIdString.toIntOrNull()
-
         if (projectId != null) {
             getStudentsByProject(projectId)
             sendQuestionsRequest(projectId)
 
-            defenseStarted = sharedPref.getBoolean(PREF_DEFENSE_STARTED + projectId, false)
-            if (defenseStarted) {
-                startDefenseContainer.visibility = View.GONE
-                mainContentContainer.visibility = View.VISIBLE
-                actionMenuButton.visibility = View.VISIBLE
-
-                val defenseTime = sharedPref.getString(PREF_DEFENSE_TIME + projectId, "")
-                if (defenseTime?.isNotEmpty() == true) {
-                    Toast.makeText(this, "Защита началась в $defenseTime", Toast.LENGTH_SHORT).show()
-                }
-            }
+            getProjectStatus(projectId)
         } else {
             Toast.makeText(this, "Неверный ID проекта", Toast.LENGTH_SHORT).show()
         }
 
         micButton.setOnClickListener {
             if (isRecording) {
-                stopRecording()
+                showStopRecordingDialog()
             } else {
-                startRecording()
+                showStartRecordingDialog()
             }
         }
         val fabAddQuestion = findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fabAddQuestion)
@@ -155,22 +145,133 @@ class ProjectDetailsActivity : AppCompatActivity() {
             showActionMenu(it)
         }
     }
+
+
+    private fun showStartRecordingDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Начать запись")
+            .setMessage("Вы хотите начать запись аудио?")
+            .setPositiveButton("Да") { _, _ ->
+                startRecording()
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun showStopRecordingDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Остановить запись")
+            .setMessage("Что вы хотите сделать с текущей записью?")
+            .setPositiveButton("Сохранить и отправить") { _, _ ->
+                stopRecording()
+                uploadAudioFile()
+            }
+            .setNeutralButton("Отменить запись") { _, _ ->
+                cancelRecording()
+            }
+            .setNegativeButton("Продолжить запись", null)
+            .show()
+    }
+
+    private fun cancelRecording() {
+        try {
+            mediaRecorder?.apply {
+                stop()
+                release()
+            }
+            mediaRecorder = null
+
+            val file = File(audioFilePath)
+            if (file.exists()) {
+                file.delete()
+            }
+
+            isRecording = false
+            handler.removeCallbacks(recordingRunnable)
+            recordingTimeTextView.text = "00:00"
+            micButton.setImageResource(R.drawable.ic_mic_off)
+
+            Toast.makeText(this, "Запись отменена", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Ошибка при отмене записи", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun getProjectStatus(projectId: Int) {
+        apiService.getProjectStatus(projectId).enqueue(object : Callback<ProjectStatusResponse> {
+            override fun onResponse(call: Call<ProjectStatusResponse>, response: Response<ProjectStatusResponse>) {
+                if (response.isSuccessful) {
+                    val statusResponse = response.body()
+                    if (statusResponse != null) {
+                        projectStatus = statusResponse.status
+                        updateUIStatus()
+                    }
+                } else {
+                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при получении статуса проекта", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<ProjectStatusResponse>, t: Throwable) {
+                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при получении статуса проекта", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun updateProjectStatus(newStatus: Boolean) {
+        val request = ProjectStatusUpdateRequest(project.ID, newStatus)
+
+        apiService.updateProjectStatus(request).enqueue(object : Callback<ProjectStatusResponse> {
+            override fun onResponse(call: Call<ProjectStatusResponse>, response: Response<ProjectStatusResponse>) {
+                if (response.isSuccessful) {
+                    projectStatus = newStatus
+                } else {
+                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при обновлении статуса проекта", Toast.LENGTH_SHORT).show()
+                }
+            }
+            override fun onFailure(call: Call<ProjectStatusResponse>, t: Throwable) {
+                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при обновлении статуса проекта", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun updateUIStatus() {
+        if (projectStatus) {
+            startDefenseContainer.visibility = View.GONE
+            mainContentContainer.visibility = View.VISIBLE
+            actionMenuButton.visibility = View.VISIBLE
+
+            sendQuestionsRequest(project.ID)
+            val defenseTime = sharedPref.getString(PREF_DEFENSE_TIME + project.ID, "")
+            if (defenseTime?.isNotEmpty() == true) {
+                Toast.makeText(this, "Защита началась в $defenseTime", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            startDefenseContainer.visibility = View.VISIBLE
+            mainContentContainer.visibility = View.GONE
+            actionMenuButton.visibility = View.GONE
+        }
+    }
+
     private fun startDefense() {
         val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-        MaterialAlertDialogBuilder(this).setTitle("Начать защиту")
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Начать защиту")
             .setMessage("Вы уверены, что хотите начать защиту проекта? Время начала: $currentTime")
             .setPositiveButton("Да") { _, _ ->
                 sendDefenseStartTime(currentTime)
-
+                updateProjectStatus(true)
                 startDefenseContainer.visibility = View.GONE
                 mainContentContainer.visibility = View.VISIBLE
                 actionMenuButton.visibility = View.VISIBLE
-                defenseStarted = true
+
+                sendQuestionsRequest(project.ID)
+
                 sharedPref.edit().apply {
                     putBoolean(PREF_DEFENSE_STARTED + project.ID, true)
                     putString(PREF_DEFENSE_TIME + project.ID, currentTime)
                     apply()
                 }
+
                 Toast.makeText(this, "Защита началась в $currentTime", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Отмена", null)
@@ -226,6 +327,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     remove(PREF_DEFENSE_TIME + project.ID)
                     apply()
                 }
+                updateProjectStatus(false)
                 Toast.makeText(this, "Защита отменена", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Нет", null)
@@ -392,6 +494,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
             recordingTime = 0
             updateRecordingTime()
             micButton.setImageResource(R.drawable.ic_mic_on)
+            Toast.makeText(this, "Запись началась", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             Log.e("Recording", "Ошибка записи: ${e.message}")
             Toast.makeText(this, "Ошибка записи", Toast.LENGTH_SHORT).show()
@@ -406,27 +509,31 @@ class ProjectDetailsActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                startRecording()
+                showStartRecordingDialog()
             } else {
                 Toast.makeText(this, "Доступ к микрофону запрещён", Toast.LENGTH_SHORT).show()
             }
         }
     }
+
     private fun releaseMediaRecorder() {
         mediaRecorder?.release()
         mediaRecorder = null
     }
     private fun stopRecording() {
-        mediaRecorder?.apply {
-            stop()
-            release()
-        }
-        isRecording = false
-        handler.post {
+        try {
+            mediaRecorder?.apply {
+                stop()
+                release()
+            }
+            mediaRecorder = null
+            isRecording = false
+            handler.removeCallbacks(recordingRunnable)
             micButton.setImageResource(R.drawable.ic_mic_off)
+            Toast.makeText(this, "Запись остановлена", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Ошибка при остановке записи", Toast.LENGTH_SHORT).show()
         }
-        handler.removeCallbacks(recordingRunnable) // Остановите обновление времени
-        uploadAudioFile()
     }
     private fun updateRecordingTime() {
         recordingRunnable = Runnable {
@@ -434,11 +541,11 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 recordingTime++
                 val minutes = recordingTime / 60
                 val seconds = recordingTime % 60
-                recordingTimeTextView.text = String.format("%02d:%02d", minutes, seconds) // Форматирование времени
-                handler.postDelayed(recordingRunnable, 1000) // Обновление каждую секунду
+                recordingTimeTextView.text = String.format("%02d:%02d", minutes, seconds)
+                handler.postDelayed(recordingRunnable, 1000)
             }
         }
-        handler.post(recordingRunnable) // Запускаем Runnable
+        handler.post(recordingRunnable)
     }
     private fun uploadAudioFile() {
         val file = File(audioFilePath)
@@ -446,7 +553,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
             Toast.makeText(this, "Файл не найден", Toast.LENGTH_SHORT).show()
             return
         }
-
+        Toast.makeText(this, "Отправка аудио...", Toast.LENGTH_SHORT).show()
         val requestFile = RequestBody.create("audio/3gp".toMediaTypeOrNull(), file)
         val body = MultipartBody.Part.createFormData("audio", file.name, requestFile)
 
@@ -465,6 +572,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
 
             override fun onFailure(call: Call<UploadResponse>, t: Throwable) {
                 Log.e("Upload Error", t.message ?: "Неизвестная ошибка")
+                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при отправке аудио", Toast.LENGTH_SHORT).show()
             }
         })
     }

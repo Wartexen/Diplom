@@ -1,15 +1,9 @@
 package com.example.myapplication
 
-import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,11 +14,10 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import android.widget.Toast
-import androidx.appcompat.widget.PopupMenu
-import com.example.myapplication.Activity.BitrixAuthActivity
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.myapplication.Activity.ProjectDetailsActivity
 import com.example.myapplication.Adapter.ProjectAdapter
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.example.myapplication.Models.Requests.ProjectStatusResponse
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -33,19 +26,21 @@ class ProjectListActivity : AppCompatActivity() {
     private lateinit var projectsList: List<Project>
     private lateinit var filterButton: FloatingActionButton
     private lateinit var filterLayout: View
-    private lateinit var sharedPref: SharedPreferences
-    private lateinit var toolbar: androidx.appcompat.widget.Toolbar
-    private lateinit var userName: TextView
-    private lateinit var profileIcon: ImageView
-
+    private lateinit var apiService: ApiService
+    private lateinit var adapter: ProjectAdapter
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private var selectedScheduleId: Int = -1
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_project_list)
+
         try {
             val selectedDpp = intent.getStringExtra("selectedDpp")
             val selectedScheduleId = intent.getIntExtra("selectedScheduleId", -1)
             val selectedCommission = intent.getStringExtra("selectedCommission")
             val selectedDate = intent.getStringExtra("selectedDate")
+
+            this.selectedScheduleId = selectedScheduleId
 
             val selectedDppTextView = findViewById<TextView>(R.id.selectedDpp)
             val selectedCommissionTextView = findViewById<TextView>(R.id.selectedCommission)
@@ -54,21 +49,19 @@ class ProjectListActivity : AppCompatActivity() {
             selectedDppTextView.text = selectedDpp ?: "Не указано"
             selectedCommissionTextView.text = selectedCommission ?: "Не указано"
             selectedDateTextView.text = selectedDate ?: "Не указано"
-            // Инициализация SharedPreferences
-            sharedPref = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
-            // Инициализация элементов Toolbar
-            toolbar = findViewById(R.id.toolbar)
-            userName = findViewById(R.id.userName)
-            profileIcon = findViewById(R.id.profileIcon)
-            // Проверка авторизации
-            checkAuthStatus()
-            // Инициализация Retrofit
+
             val retrofit = Retrofit.Builder()
                 .baseUrl("http://10.0.2.2:8000/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build()
 
-            val apiService = retrofit.create(ApiService::class.java)
+            apiService = retrofit.create(ApiService::class.java)
+
+            swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout)
+            swipeRefreshLayout.setColorSchemeResources(R.color.status_ready)
+            swipeRefreshLayout.setOnRefreshListener {
+                refreshProjects()
+            }
 
             if (selectedScheduleId != -1) {
                 getProjects(apiService, selectedScheduleId)
@@ -89,12 +82,10 @@ class ProjectListActivity : AppCompatActivity() {
             val buttonNext = findViewById<Button>(R.id.buttonNext)
             buttonNext.setOnClickListener {
                 try {
-
                     val dpp = selectedDppTextView.text?.toString() ?: ""
                     val commission = selectedCommissionTextView.text?.toString() ?: ""
                     val date = selectedDateTextView.text?.toString() ?: ""
 
-                    // Проверяем ID расписания
                     val scheduleId = selectedScheduleId
                     if (scheduleId == -1) {
                         throw IllegalStateException("Invalid schedule ID: $scheduleId")
@@ -105,8 +96,10 @@ class ProjectListActivity : AppCompatActivity() {
                     intent.putExtra("selectedCommission", commission)
                     intent.putExtra("selectedDate", date)
                     intent.putExtra("selectedScheduleId", scheduleId)
+
                     startActivity(intent)
                 } catch (e: Exception) {
+
                     Toast.makeText(this, "Ошибка: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
@@ -115,13 +108,26 @@ class ProjectListActivity : AppCompatActivity() {
         }
     }
 
+    private fun refreshProjects() {
+        if (selectedScheduleId != -1) {
+            getProjects(apiService, selectedScheduleId)
+        } else {
+            swipeRefreshLayout.isRefreshing = false
+            showToast("Ошибка: неверный ID расписания")
+        }
+    }
+
     private fun getProjects(apiService: ApiService, defenseScheduleId: Int) {
         apiService.getProjectsByDefenseSchedule(defenseScheduleId).enqueue(object : Callback<List<Project>> {
             override fun onResponse(call: Call<List<Project>>, response: Response<List<Project>>) {
+                swipeRefreshLayout.isRefreshing = false
+
                 if (response.isSuccessful) {
                     response.body()?.let { projects ->
                         projectsList = projects
                         setupRecyclerView(projects)
+
+                        updateProjectStatuses(projects)
                     } ?: run {
                         showToast("Ответ пустой")
                     }
@@ -131,19 +137,55 @@ class ProjectListActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<List<Project>>, t: Throwable) {
+                swipeRefreshLayout.isRefreshing = false
                 showToast("Ошибка: ${t.message}")
             }
         })
+    }
+
+    private fun updateProjectStatuses(projects: List<Project>) {
+        for (project in projects) {
+            getProjectStatus(project.ID)
+        }
+    }
+
+    private fun getProjectStatus(projectId: Int) {
+        apiService.getProjectStatus(projectId).enqueue(object : Callback<ProjectStatusResponse> {
+            override fun onResponse(call: Call<ProjectStatusResponse>, response: Response<ProjectStatusResponse>) {
+                if (response.isSuccessful) {
+                    val statusResponse = response.body()
+                    if (statusResponse != null) {
+                        updateProjectInList(statusResponse.project_id, statusResponse.status)
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<ProjectStatusResponse>, t: Throwable) {
+                showToast("Ошибка: ${t.message}")
+            }
+        })
+    }
+
+    private fun updateProjectInList(projectId: Int, newStatus: Boolean) {
+        val updatedProjects = projectsList.map { project ->
+            if (project.ID == projectId) {
+                Project(project.ID, project.Title, project.Supervisor, newStatus)
+            } else {
+                project
+            }
+        }
+        projectsList = updatedProjects
+        setupRecyclerView(updatedProjects)
     }
 
     private fun setupRecyclerView(projects: List<Project>) {
         try {
             val recyclerView = findViewById<RecyclerView>(R.id.recyclerViewProjects)
             recyclerView.layoutManager = LinearLayoutManager(this)
-            val adapter = ProjectAdapter(projects)
+            adapter = ProjectAdapter(projects)
             recyclerView.adapter = adapter
-            adapter.onProjectClickListener = { project ->
 
+            adapter.onProjectClickListener = { project ->
                 val intent = Intent(this, ProjectDetailsActivity::class.java)
                 intent.putExtra("project", project)
                 startActivity(intent)
@@ -165,90 +207,10 @@ class ProjectListActivity : AppCompatActivity() {
         }
     }
 
-
-    private fun checkAuthStatus() {
-        val isLoggedIn = sharedPref.getBoolean("isLoggedIn", false)
-        if (!isLoggedIn) {
-            startActivity(Intent(this, BitrixAuthActivity::class.java))
-            finish()
-        } else {
-
-            val fullName = sharedPref.getString("fullName", "") ?: ""
-            userName.text = formatUserName(fullName)
-
-            profileIcon.setOnClickListener {
-                showProfilePopup(it)
-            }
-        }
-    }
-
-    private fun formatUserName(fullName: String): String {
-        return try {
-            val parts = fullName.split(" ")
-            when {
-                parts.size >= 3 -> "${parts[0]} ${parts[1].first()}.${parts[2].first()}."
-                parts.size == 2 -> "${parts[0]} ${parts[1].first()}."
-                else -> fullName
-            }
-        } catch (e: Exception) {
-            fullName
-        }
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_profile -> {
-                showProfilePopup(findViewById(item.itemId))
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-    private fun showProfilePopup(anchor: View) {
-        val popup = PopupMenu(this, anchor)
-        popup.menuInflater.inflate(R.menu.profile_menu, popup.menu)
-
-        popup.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.menu_logout -> {
-                    showLogoutConfirmation()
-                    true
-                }
-                else -> false
-            }
-        }
-        popup.show()
-    }
-
-    private fun showLogoutConfirmation() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Выход из аккаунта")
-            .setMessage("Вы уверены, что хотите выйти?")
-            .setPositiveButton("Выйти") { _, _ ->
-                logout()
-            }
-            .setNegativeButton("Отмена", null)
-            .show()
-    }
-
-    private fun logout() {
-        sharedPref.edit().clear().apply()
-        val intent = Intent(this, BitrixAuthActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
-    }
-
     override fun onResume() {
         super.onResume()
-        if (!sharedPref.getBoolean("isLoggedIn", false)) {
-            logout()
+        if (selectedScheduleId != -1) {
+            refreshProjects()
         }
     }
 }

@@ -10,6 +10,7 @@ import com.example.myapplication.Models.Question
 import com.example.myapplication.Models.Requests.QuestionRequest
 import com.example.myapplication.Models.Auth.SecretaryIdResponse
 import com.example.myapplication.Models.Auth.SecretaryResponse
+import com.example.myapplication.Models.Requests.ProjectStatusUpdateRequest
 import com.example.myapplication.Models.Requests.ProjectTimeRequest
 import com.example.myapplication.Models.Specialization
 import com.example.myapplication.Models.Student
@@ -27,23 +28,23 @@ import retrofit2.http.Part
 import retrofit2.http.Query
 
 interface ApiService {
-    @GET("/api/projects/by_defense_schedule/")//+
+    @GET("/api/projects/by_defense_schedule/")
     fun getProjectsBydefense_schedule_id(@Query("defense_schedule_id") defense_schedule_id: Int): Call<List<Project>>
 
-    @POST("api/defenses/add_commission/")//+
+    @POST("api/defenses/add_commission/")
     fun addCommissionToSchedule(@Body request: CommissionScheduleRequest): Call<Void>
 
-    @GET("api/projects/students/")//+
+    @GET("api/projects/students/")
     fun getStudentsByProject(@Query("project_id") projectId: Int): Call<List<Student>>
 
     @Multipart
-    @POST("api/upload-audio/")//+
+    @POST("api/upload-audio/")
     fun uploadAudio(
         @Part audio: MultipartBody.Part,
         @Part("project_id") projectId: RequestBody
     ): Call<UploadResponse>
 
-    @GET("api/questions/by_project/")//+
+    @GET("api/questions/by_project/")
     fun getQuestionsByProject(@Query("project_id") projectId: Int): Call<List<Question>>
     @GET("api/questions")
 
@@ -52,7 +53,7 @@ interface ApiService {
     fun getSecretaryId(@Body requestBody: Map<String, String>): Call<SecretaryIdResponse>
 
 
-    @POST("api/users/login/")//+
+    @POST("api/users/login/")
     fun authenticateUser(@Body requestBody: Map<String, String>): Call<SecretaryResponse>
 
     @POST("api/questions/create_question/")
@@ -69,13 +70,13 @@ interface ApiService {
         @Query("question_id") questionId: Int
     ): Call<Void>
 
-    @GET("api/users/specializations/")//+
+    @GET("api/users/specializations/")
     fun getSpecializationsBySecretary(@Query("secretary_id") secretaryId: Int): Call<List<Specialization>>
 
-    @GET("api/users/commissions/")//+
+    @GET("api/users/commissions/")
     fun getCommissionsBySecretary(@Query("secretary_id") secretaryId: Int): Call<List<Commission>>
 
-    @GET("api/defenses/today/")//+
+    @GET("api/defenses/today/")
     fun getTodayDefensesBySpecialization(@Query("specialization_id") commissionId: Int, @Query("date") date: String): Call<List<DefenseSchedule>>
 
     @GET("api/projects/by_defense_schedule/")
@@ -90,4 +91,6 @@ interface ApiService {
     @POST("api/projects/project_time/")
     fun setProjectTime(@Body request: ProjectTimeRequest): Call<Void>
 
+    @POST("api/projects/update_status/")
+    fun updateProjectStatus(@Body request: ProjectStatusUpdateRequest): Call<ProjectStatusResponse>
 }
