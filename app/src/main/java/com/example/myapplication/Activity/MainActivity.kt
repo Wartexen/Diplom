@@ -229,13 +229,17 @@ class MainActivity : AppCompatActivity() {
         spinnerDefenseSchedule.isEnabled = false
     }
 
+
     private fun fetchSpecializations(apiService: ApiService, secretaryId: Int) {
-        apiService.getSpecializationsBySecretary(secretaryId).enqueue(createCallback { specializations ->
-            this.specializationsList = specializations
-            val specializationNames = listOf("Выберите направление") + specializations.map { it.Name }
+        apiService.getSecretarySpecializations(secretaryId).enqueue(createCallback { responses ->
+            this.specializationsList = responses.mapNotNull { it.ID_Specialization } // Извлекаем Specialization
+            val specializationNames = listOf("Выберите направление") + this.specializationsList.map { it.Name ?: "" } // Обработка имени
             updateSpinnerDpp(specializationNames)
         })
     }
+
+
+
 
     private fun fetchCommissions(apiService: ApiService, secretaryId: Int, specializationId: Int) {
         apiService.getCommissionsBySecretary(secretaryId).enqueue(createCallback { commissions ->

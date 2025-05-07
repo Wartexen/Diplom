@@ -12,7 +12,7 @@ import com.example.myapplication.Models.Auth.SecretaryIdResponse
 import com.example.myapplication.Models.Auth.SecretaryResponse
 import com.example.myapplication.Models.Requests.ProjectStatusUpdateRequest
 import com.example.myapplication.Models.Requests.ProjectTimeRequest
-import com.example.myapplication.Models.Specialization
+import com.example.myapplication.Models.Response.SecretarySpecializationResponse
 import com.example.myapplication.Models.Student
 import com.example.myapplication.Models.Requests.UploadResponse
 import okhttp3.MultipartBody
@@ -48,14 +48,12 @@ interface ApiService {
     fun getQuestionsByProject(@Query("project_id") projectId: Int): Call<List<Question>>
 
 
-    @GET("/api/secretary/")
+    @GET("/api/secretary/")//+
     fun getSecretaryId(
         @Query("name") name: String,
         @Query("patronymic") patronymic: String,
         @Query("surname") surname: String
     ): Call<SecretaryIdResponse>
-
-
 
     @POST("api/users/login/")
     fun authenticateUser(@Body requestBody: Map<String, String>): Call<SecretaryResponse>
@@ -74,8 +72,10 @@ interface ApiService {
         @Query("question_id") questionId: Int
     ): Call<Void>
 
-    @GET("api/users/specializations/")
-    fun getSpecializationsBySecretary(@Query("secretary_id") secretaryId: Int): Call<List<Specialization>>
+    @GET("/api/secretary_specialization/")//+
+    fun getSecretarySpecializations(
+        @Query("ID_Secretary") secretaryId: Int
+    ): Call<List<SecretarySpecializationResponse>>
 
     @GET("api/users/commissions/")
     fun getCommissionsBySecretary(@Query("secretary_id") secretaryId: Int): Call<List<Commission>>
