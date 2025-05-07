@@ -72,11 +72,10 @@ class QuestionAdapter(private val questions: MutableList<Question>) :
         holder.saveButton.setOnClickListener {
             val newText = holder.editQuestionText.text.toString().trim()
             if (newText.isNotEmpty()) {
-                onQuestionSaveListener?.invoke(question, newText)
+                onQuestionSaveListener?.invoke(question, newText) // Передаем вопрос и новый текст
 
                 holder.questionText.visibility = View.VISIBLE
                 holder.editQuestionText.visibility = View.GONE
-                holder.editQuestionText.setText(newText)
                 holder.editButtonsLayout.visibility = View.GONE
                 holder.editButton.visibility = View.VISIBLE
                 holder.deleteButton.visibility = View.VISIBLE

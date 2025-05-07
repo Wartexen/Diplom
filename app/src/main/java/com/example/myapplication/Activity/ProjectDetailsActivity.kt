@@ -578,17 +578,13 @@ class ProjectDetailsActivity : AppCompatActivity() {
             }
         })
     }
-
     private fun updateQuestionOnServer(questionId: Int, newText: String) {
         val updateRequest = QuestionUpdateRequest(newText)
         apiService.updateQuestion(questionId, updateRequest).enqueue(object : Callback<Question> {
             override fun onResponse(call: Call<Question>, response: Response<Question>) {
                 if (response.isSuccessful) {
-                    val updatedQuestion = response.body()
-                    if (updatedQuestion != null) {
-                        Toast.makeText(this@ProjectDetailsActivity, "Вопрос успешно обновлен", Toast.LENGTH_SHORT).show()
-                        sendQuestionsRequest(updatedQuestion.ID_Project)
-                    }
+                    Toast.makeText(this@ProjectDetailsActivity, "Вопрос успешно обновлен", Toast.LENGTH_SHORT).show()
+                    sendQuestionsRequest(project.ID)
                 } else {
                     val errorMessage = response.errorBody()?.string() ?: "Неизвестная ошибка"
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка при обновлении вопроса: $errorMessage", Toast.LENGTH_SHORT).show()
