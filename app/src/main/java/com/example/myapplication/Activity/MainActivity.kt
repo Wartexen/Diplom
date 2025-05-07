@@ -247,10 +247,9 @@ class MainActivity : AppCompatActivity() {
        })
    }
     private fun fetchDefenseSchedule(apiService: ApiService, specialization_id: Int) {
-        val date = "2024-12-21"
-        apiService.getTodayDefensesBySpecialization(specialization_id, date).enqueue(createCallback { schedules ->
-            this.defenseSchedulesList = schedules
-            val dateTimeValues = listOf("Выберите дату защиты") + schedules.map { formatDate(it.DateTime) }
+        apiService.getDefensesBySpecialization(specialization_id).enqueue(createCallback { responses ->
+            this.defenseSchedulesList = responses
+            val dateTimeValues = listOf("Выберите дату защиты") + responses.map { formatDate(it.DateTime) }
             updateSpinnerDefenseSchedule(dateTimeValues)
             spinnerDefenseSchedule.isEnabled = true
         })

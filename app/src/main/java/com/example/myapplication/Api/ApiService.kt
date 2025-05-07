@@ -73,14 +73,16 @@ interface ApiService {
         @Query("ID_Secretary") secretaryId: Int
     ): Call<List<SecretarySpecializationResponse>>
 
-    @GET("api/commissions/")
+    @GET("api/commissions/")//+
     fun getCommissionsBySecretary(
         @Query("ID_Member") secretaryId: Int,
         @Query("Role") role: String
     ): Call<List<CommissionResponse>>
 
-    @GET("api/defenses/today/")
-    fun getTodayDefensesBySpecialization(@Query("specialization_id") commissionId: Int, @Query("date") date: String): Call<List<DefenseSchedule>>
+    @GET("api/defenses/")//+
+    fun getDefensesBySpecialization(
+        @Query("specialization_id") specializationId: Int
+    ): Call<List<DefenseSchedule>>
 
     @GET("api/projects/by_defense_schedule/")
     fun getProjectsByDefenseSchedule(@Query("defense_schedule_id") defenseScheduleId: Int): Call<List<Project>>
