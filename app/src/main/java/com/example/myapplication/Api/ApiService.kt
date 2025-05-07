@@ -47,8 +47,8 @@ interface ApiService {
         @Part("project_id") projectId: RequestBody
     ): Call<UploadResponse>
 
-    @GET("api/questions/by_project/")
-    fun getQuestionsByProject(@Query("project_id") projectId: Int): Call<List<Question>>
+    @GET("api/questions/")//+
+    fun getQuestionsByProject(@Query("ID_Project") projectId: Int): Call<List<Question>>
 
 
     @GET("/api/secretary/")//+
@@ -93,9 +93,9 @@ interface ApiService {
 
     @POST("api/projects/grade/")
     fun gradeStudent(@Body gradeRequest: GradeRequest): Call<GradeResponse>
+    @GET("api/projects/{projectId}/")//+
+    fun getProjectStatus(@Path("projectId") projectId: Int): Call<Project>
 
-    @GET("api/projects/project_status/")
-    fun getProjectStatus(@Query("project_id") projectId: Int): Call<ProjectStatusResponse>
 
     @POST("api/projects/project_time/")
     fun setProjectTime(@Body request: ProjectTimeRequest): Call<Void>

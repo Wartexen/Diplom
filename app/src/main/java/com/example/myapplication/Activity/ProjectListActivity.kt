@@ -252,18 +252,21 @@ class ProjectListActivity : AppCompatActivity() {
     }
 
     private fun getProjectStatus(projectId: Int) {
-        apiService.getProjectStatus(projectId).enqueue(object : Callback<ProjectStatusResponse> {
-            override fun onResponse(call: Call<ProjectStatusResponse>, response: Response<ProjectStatusResponse>) {
+        apiService.getProjectStatus(projectId).enqueue(object : Callback<Project> {
+            override fun onResponse(call: Call<Project>, response: Response<Project>) {
                 if (response.isSuccessful) {
                     val statusResponse = response.body()
                     if (statusResponse != null) {
-                        updateProjectInList(statusResponse.project_id, statusResponse.status)
+                        updateProjectInList(statusResponse.ID, statusResponse.Status)
                     }
+                } else {
+                    showToast("Ошибка при получении статуса проекта")
                 }
             }
 
-            override fun onFailure(call: Call<ProjectStatusResponse>, t: Throwable) {
-                showToast("Ошибка: ${t.message}")
+            override fun onFailure(call: Call<Project>, t: Throwable) {
+                val errorMessage = t.message ?: "Неизвестная ошибка"
+                showToast("Ошибка: $errorMessage")
             }
         })
     }

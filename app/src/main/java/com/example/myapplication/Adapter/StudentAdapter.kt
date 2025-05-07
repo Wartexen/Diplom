@@ -27,7 +27,7 @@ class StudentAdapter(private val students: List<Student>) :
 
         val fullName = "${student.Surname ?: ""} ${student.Name ?: ""} ${student.Patronymic ?: ""}".trim()
         holder.studentName.text = fullName
-        //holder.studentGroup.text = "Группа: ${student.GroupName}"
+        holder.studentGroup.text = "Группа: ${student.ID_Group.Name}"
     }
 
     override fun getItemCount() = students.size

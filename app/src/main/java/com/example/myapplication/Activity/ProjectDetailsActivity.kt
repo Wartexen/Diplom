@@ -198,12 +198,12 @@ class ProjectDetailsActivity : AppCompatActivity() {
     }
 
     private fun getProjectStatus(projectId: Int) {
-        apiService.getProjectStatus(projectId).enqueue(object : Callback<ProjectStatusResponse> {
-            override fun onResponse(call: Call<ProjectStatusResponse>, response: Response<ProjectStatusResponse>) {
+        apiService.getProjectStatus(projectId).enqueue(object : Callback<Project> {
+            override fun onResponse(call: Call<Project>, response: Response<Project>) {
                 if (response.isSuccessful) {
                     val statusResponse = response.body()
                     if (statusResponse != null) {
-                        projectStatus = statusResponse.status
+                        projectStatus = statusResponse.Status
                         updateUIStatus()
                     }
                 } else {
@@ -211,7 +211,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 }
             }
 
-            override fun onFailure(call: Call<ProjectStatusResponse>, t: Throwable) {
+            override fun onFailure(call: Call<Project>, t: Throwable) {
                 Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при получении статуса проекта", Toast.LENGTH_SHORT).show()
             }
         })
@@ -451,25 +451,32 @@ class ProjectDetailsActivity : AppCompatActivity() {
             }
         })
     }
-   /* private fun getStudentsByProject(projectId: Int) {
-        apiService.getStudentsByProject(projectId).enqueue(object : Callback<List<Student>> {
-            override fun onResponse(call: Call<List<Student>>, response: Response<List<Student>>) {
+    private fun sendQuestionsRequest(projectId: Int) {
+        apiService.getQuestionsByProject(projectId).enqueue(object : Callback<List<Question>> {
+            override fun onResponse(call: Call<List<Question>>, response: Response<List<Question>>) {
                 if (response.isSuccessful) {
-                    val students = response.body() ?: emptyList()
-                    studentsRecyclerView.layoutManager = LinearLayoutManager(this@ProjectDetailsActivity)
-                    studentsRecyclerView.adapter = StudentAdapter(students)
+                    val questions = response.body() ?: emptyList()
+                    questionAdapter = QuestionAdapter(questions.toMutableList())
+                    questionAdapter.setOnQuestionDeleteListener { question ->
+                        deleteQuestionOnServer(question)
+                    }
+                    questionAdapter.setOnQuestionSaveListener { question, newText ->
+                        updateQuestionOnServer(question.ID, newText)
+                    }
+                    questionsRecyclerView.layoutManager = LinearLayoutManager(this@ProjectDetailsActivity)
+                    questionsRecyclerView.adapter = questionAdapter
                 } else {
                     val errorMessage = response.errorBody()?.string() ?: "Неизвестная ошибка"
-                    Log.e("API Error", errorMessage)
+                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при получении вопросов", Toast.LENGTH_SHORT).show()
                 }
             }
 
-            override fun onFailure(call: Call<List<Student>>, t: Throwable) {
-                Log.e("Network Error", t.message ?: "Неизвестная ошибка")
+            override fun onFailure(call: Call<List<Question>>, t: Throwable) {
+                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети", Toast.LENGTH_SHORT).show()
             }
         })
-    }*/
-    private fun sendQuestionsRequest(projectId: Int) {
+    }
+   /* private fun sendQuestionsRequest(projectId: Int) {
         apiService.getQuestionsByProject(projectId).enqueue(object : Callback<List<Question>> {
             override fun onResponse(call: Call<List<Question>>, response: Response<List<Question>>) {
                 if (response.isSuccessful) {
@@ -492,7 +499,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети", Toast.LENGTH_SHORT).show()
             }
         })
-    }
+    }*/
     private fun startRecording() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_RECORD_AUDIO_PERMISSION)
