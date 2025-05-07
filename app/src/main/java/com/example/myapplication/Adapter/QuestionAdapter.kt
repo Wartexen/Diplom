@@ -76,6 +76,7 @@ class QuestionAdapter(private val questions: MutableList<Question>) :
 
                 holder.questionText.visibility = View.VISIBLE
                 holder.editQuestionText.visibility = View.GONE
+                holder.editQuestionText.setText(newText)
                 holder.editButtonsLayout.visibility = View.GONE
                 holder.editButton.visibility = View.VISIBLE
                 holder.deleteButton.visibility = View.VISIBLE

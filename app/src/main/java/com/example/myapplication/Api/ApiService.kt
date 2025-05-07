@@ -10,6 +10,7 @@ import com.example.myapplication.Models.Requests.QuestionRequest
 import com.example.myapplication.Models.Auth.SecretaryIdResponse
 import com.example.myapplication.Models.Requests.ProjectStatusUpdateRequest
 import com.example.myapplication.Models.Requests.ProjectTimeRequest
+import com.example.myapplication.Models.Requests.QuestionUpdateRequest
 import com.example.myapplication.Models.Response.CommissionResponse
 import com.example.myapplication.Models.Response.SecretarySpecializationResponse
 import com.example.myapplication.Models.Student
@@ -58,19 +59,17 @@ interface ApiService {
         @Query("surname") surname: String
     ): Call<SecretaryIdResponse>
 
-    @POST("api/questions/create_question/")
+    @POST("api/questions/")//++
     fun createQuestion(@Body request: QuestionRequest): Call<Question>
 
-    @PUT("api/questions/update_question/")
+    @PATCH("api/questions/{questionId}/")//+
     fun updateQuestion(
-        @Query("question_id") questionId: Int,
-        @Query("text") text: String
-    ): Call<Void>
+        @Path("questionId") questionId: Int,
+        @Body request: QuestionUpdateRequest
+    ): Call<Question>
 
-    @DELETE("api/questions/delete/")
-    fun deleteQuestion(
-        @Query("question_id") questionId: Int
-    ): Call<Void>
+    @DELETE("api/questions/{questionId}/")//+
+    fun deleteQuestion(@Path("questionId") questionId: Int): Call<Void>
 
     @GET("/api/secretary_specialization/")//+
     fun getSecretarySpecializations(

@@ -45,6 +45,7 @@ import com.example.myapplication.Models.Response.ProjectStatusResponse
 import com.example.myapplication.Models.Requests.ProjectStatusUpdateRequest
 import com.example.myapplication.Models.Requests.ProjectTimeRequest
 import com.example.myapplication.Models.Requests.QuestionRequest
+import com.example.myapplication.Models.Requests.QuestionUpdateRequest
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -451,7 +452,8 @@ class ProjectDetailsActivity : AppCompatActivity() {
             }
         })
     }
-    private fun sendQuestionsRequest(projectId: Int) {
+
+   private fun sendQuestionsRequest(projectId: Int) {
         apiService.getQuestionsByProject(projectId).enqueue(object : Callback<List<Question>> {
             override fun onResponse(call: Call<List<Question>>, response: Response<List<Question>>) {
                 if (response.isSuccessful) {
@@ -470,36 +472,11 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка при получении вопросов", Toast.LENGTH_SHORT).show()
                 }
             }
-
             override fun onFailure(call: Call<List<Question>>, t: Throwable) {
                 Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети", Toast.LENGTH_SHORT).show()
             }
         })
     }
-   /* private fun sendQuestionsRequest(projectId: Int) {
-        apiService.getQuestionsByProject(projectId).enqueue(object : Callback<List<Question>> {
-            override fun onResponse(call: Call<List<Question>>, response: Response<List<Question>>) {
-                if (response.isSuccessful) {
-                    val questions = response.body() ?: emptyList()
-                    questionAdapter = QuestionAdapter(questions.toMutableList())
-                    questionAdapter.setOnQuestionDeleteListener { question ->
-                        deleteQuestionOnServer(question)
-                    }
-                    questionAdapter.setOnQuestionSaveListener { question, newText ->
-                        updateQuestionOnServer(question.ID, newText)
-                    }
-                    questionsRecyclerView.layoutManager = LinearLayoutManager(this@ProjectDetailsActivity)
-                    questionsRecyclerView.adapter = questionAdapter
-                } else {
-                    val errorMessage = response.errorBody()?.string() ?: "Неизвестная ошибка"
-                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при получении вопросов", Toast.LENGTH_SHORT).show()
-                }
-            }
-            override fun onFailure(call: Call<List<Question>>, t: Throwable) {
-                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети", Toast.LENGTH_SHORT).show()
-            }
-        })
-    }*/
     private fun startRecording() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_RECORD_AUDIO_PERMISSION)
@@ -603,22 +580,27 @@ class ProjectDetailsActivity : AppCompatActivity() {
     }
 
     private fun updateQuestionOnServer(questionId: Int, newText: String) {
-        apiService.updateQuestion(questionId, newText).enqueue(object : Callback<Void> {
-            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+        val updateRequest = QuestionUpdateRequest(newText)
+        apiService.updateQuestion(questionId, updateRequest).enqueue(object : Callback<Question> {
+            override fun onResponse(call: Call<Question>, response: Response<Question>) {
                 if (response.isSuccessful) {
-                    Toast.makeText(this@ProjectDetailsActivity, "Вопрос успешно обновлен", Toast.LENGTH_SHORT).show()
-                    sendQuestionsRequest(project.ID)
+                    val updatedQuestion = response.body()
+                    if (updatedQuestion != null) {
+                        Toast.makeText(this@ProjectDetailsActivity, "Вопрос успешно обновлен", Toast.LENGTH_SHORT).show()
+                        sendQuestionsRequest(updatedQuestion.ID_Project)
+                    }
                 } else {
                     val errorMessage = response.errorBody()?.string() ?: "Неизвестная ошибка"
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка при обновлении вопроса: $errorMessage", Toast.LENGTH_SHORT).show()
                 }
             }
 
-            override fun onFailure(call: Call<Void>, t: Throwable) {
-                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при обновлении вопроса", Toast.LENGTH_SHORT).show()
+            override fun onFailure(call: Call<Question>, t: Throwable) {
+                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при обновлении вопроса: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }
+
     private fun deleteQuestionOnServer(questionId: Int) {
         apiService.deleteQuestion(questionId).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
@@ -629,8 +611,9 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка удаления", Toast.LENGTH_SHORT).show()
                 }
             }
+
             override fun onFailure(call: Call<Void>, t: Throwable) {
-                Toast.makeText(this@ProjectDetailsActivity, "Сетевая ошибка", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ProjectDetailsActivity, "Сетевая ошибка: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }
@@ -664,10 +647,10 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка при добавлении вопроса", Toast.LENGTH_SHORT).show()
                 }
             }
+
             override fun onFailure(call: Call<Question>, t: Throwable) {
-                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при добавлении вопроса", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при добавлении вопроса: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
     }
-
 }

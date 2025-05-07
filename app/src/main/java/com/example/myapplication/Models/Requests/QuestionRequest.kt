@@ -1,6 +1,6 @@
 package com.example.myapplication.Models.Requests
 
 data class QuestionRequest(
-    val text: String,
-    val project_id: Int
+    val Text: String,
+    val ID_Project: Int
 )
