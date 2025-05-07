@@ -129,7 +129,7 @@ class StudentGradingActivity : AppCompatActivity() {
                             name = fullName,
                             projectTitle = projectWithStudents.projectTitle,
                             grade = "",
-                            groupName = student.GroupName ?: "Группа не указана"
+                            //groupName = student.GroupName ?: "Группа не указана"
                         )
                         projectWithStudents.students.add(studentGrade)
                     }

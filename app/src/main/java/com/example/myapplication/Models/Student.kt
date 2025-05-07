@@ -4,29 +4,31 @@ import android.os.Parcelable
 
 data class Student(
     val ID: Int,
-    val Name: String?,
-    val Surname: String?,
-    val Patronymic: String?,
-    val ID_Group: Int?,
-    val GroupName: String?
-) : Parcelable {
+    val ID_Group: Group,
+    val Surname: String,
+    val Name: String,
+    val Patronymic: String,
+    val ID_Specialization: Int,
+    val ID_Project: Int
+) :  Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readString(),
-        parcel.readValue(Int::class.java.classLoader) as? Int,
-        parcel.readString()
-    ) {
-    }
+        parcel.readParcelable(Group::class.java.classLoader) ?: Group(0, "", 0),
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readInt(),
+        parcel.readInt()
+    )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeInt(ID)
-        parcel.writeString(Name)
+        parcel.writeParcelable(ID_Group, flags)
         parcel.writeString(Surname)
+        parcel.writeString(Name)
         parcel.writeString(Patronymic)
-        parcel.writeValue(ID_Group)
-        parcel.writeString(GroupName)
+        parcel.writeInt(ID_Specialization)
+        parcel.writeInt(ID_Project)
     }
 
     override fun describeContents(): Int {

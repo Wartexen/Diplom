@@ -297,20 +297,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sendCommissionId(apiService: ApiService, commissionId: Int, scheduleId: Int) {
-        val request = CommissionScheduleRequest(commissionId, scheduleId)
-        apiService.addCommissionToSchedule(request).enqueue(object : Callback<Void> {
-            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+        val request = CommissionScheduleRequest(commissionId)
+        apiService.updateDefenseSchedule(scheduleId, request).enqueue(object : Callback<DefenseSchedule> {
+            override fun onResponse(call: Call<DefenseSchedule>, response: Response<DefenseSchedule>) {
                 if (response.isSuccessful) {
+                    val updatedSchedule = response.body()
                 } else {
                     showError(response.code())
                 }
             }
 
-            override fun onFailure(call: Call<Void>, t: Throwable) {
+            override fun onFailure(call: Call<DefenseSchedule>, t: Throwable) {
                 showToast("Ошибка: ${t.message}")
             }
         })
     }
+
 
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()

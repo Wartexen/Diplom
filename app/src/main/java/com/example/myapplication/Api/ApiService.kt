@@ -21,20 +21,24 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Multipart
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
     @GET("/api/projects/by_defense_schedule/")
     fun getProjectsBydefense_schedule_id(@Query("defense_schedule_id") defense_schedule_id: Int): Call<List<Project>>
+    @PATCH("api/defenses/{ID}/")//++
+    fun updateDefenseSchedule(
+        @Path("ID") id: Int,
+        @Body request: CommissionScheduleRequest
+    ): Call<DefenseSchedule>
 
-    @POST("api/defenses/add_commission/")
-    fun addCommissionToSchedule(@Body request: CommissionScheduleRequest): Call<Void>
-
-    @GET("api/projects/students/")
-    fun getStudentsByProject(@Query("project_id") projectId: Int): Call<List<Student>>
+    @GET("api/students/")//+
+    fun getStudentsByProject(@Query("ID_Project") projectId: Int): Call<List<Student>>
 
     @Multipart
     @POST("api/upload-audio/")
@@ -84,7 +88,7 @@ interface ApiService {
         @Query("specialization_id") specializationId: Int
     ): Call<List<DefenseSchedule>>
 
-    @GET("api/projects/by_defense_schedule/")
+    @GET("api/projects/")//+
     fun getProjectsByDefenseSchedule(@Query("defense_schedule_id") defenseScheduleId: Int): Call<List<Project>>
 
     @POST("api/projects/grade/")

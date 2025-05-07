@@ -451,6 +451,24 @@ class ProjectDetailsActivity : AppCompatActivity() {
             }
         })
     }
+   /* private fun getStudentsByProject(projectId: Int) {
+        apiService.getStudentsByProject(projectId).enqueue(object : Callback<List<Student>> {
+            override fun onResponse(call: Call<List<Student>>, response: Response<List<Student>>) {
+                if (response.isSuccessful) {
+                    val students = response.body() ?: emptyList()
+                    studentsRecyclerView.layoutManager = LinearLayoutManager(this@ProjectDetailsActivity)
+                    studentsRecyclerView.adapter = StudentAdapter(students)
+                } else {
+                    val errorMessage = response.errorBody()?.string() ?: "Неизвестная ошибка"
+                    Log.e("API Error", errorMessage)
+                }
+            }
+
+            override fun onFailure(call: Call<List<Student>>, t: Throwable) {
+                Log.e("Network Error", t.message ?: "Неизвестная ошибка")
+            }
+        })
+    }*/
     private fun sendQuestionsRequest(projectId: Int) {
         apiService.getQuestionsByProject(projectId).enqueue(object : Callback<List<Question>> {
             override fun onResponse(call: Call<List<Question>>, response: Response<List<Question>>) {
