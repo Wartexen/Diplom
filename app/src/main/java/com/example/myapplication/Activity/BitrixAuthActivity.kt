@@ -268,8 +268,48 @@ class BitrixAuthActivity : AppCompatActivity() {
             }
         })
     }
-
     private fun getSecretaryId(apiService: ApiService, surname: String, name: String, patronymic: String) {
+        apiService.getSecretaryId(
+            name = name,
+            patronymic = patronymic,
+            surname = surname
+        ).enqueue(object : retrofit2.Callback<SecretaryIdResponse> {
+            override fun onResponse(
+                call: retrofit2.Call<SecretaryIdResponse>,
+                response: retrofit2.Response<SecretaryIdResponse>
+            ) {
+                if (response.isSuccessful) {
+                    response.body()?.let { secretaryIdResponse ->
+                        val secretaryId = secretaryIdResponse.id
+                        val fullName = "$surname $name $patronymic"
+
+                        // Сохраняем данные пользователя
+                        saveUserData(secretaryId, fullName)
+
+                        // Переходим в MainActivity
+                        val intent = Intent(this@BitrixAuthActivity, MainActivity::class.java).apply {
+                            putExtra("secretaryId", secretaryId)
+                            putExtra("fullName", fullName)
+                        }
+                        startActivity(intent)
+                        finish()
+                    } ?: run {
+                        showToast("Пустой ответ сервера")
+                        finishWithError("Empty response from server")
+                    }
+                } else {
+                    showToast("Ошибка сервера: ${response.code()}")
+                    finishWithError("Server error: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: retrofit2.Call<SecretaryIdResponse>, t: Throwable) {
+                showToast("Ошибка сети: ${t.message}")
+                finishWithError("Network error: ${t.message}")
+            }
+        })
+    }
+    /*private fun getSecretaryId(apiService: ApiService, surname: String, name: String, patronymic: String) {
         val requestBody = mapOf(
             "surname" to surname,
             "name" to name,
@@ -311,7 +351,7 @@ class BitrixAuthActivity : AppCompatActivity() {
                 finishWithError("Network error: ${t.message}")
             }
         })
-    }
+    }*/
 
     private fun saveUserData(secretaryId: Int, fullName: String) {
         val sharedPref = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)

@@ -46,11 +46,15 @@ interface ApiService {
 
     @GET("api/questions/by_project/")
     fun getQuestionsByProject(@Query("project_id") projectId: Int): Call<List<Question>>
-    @GET("api/questions")
 
 
-    @POST("api/users/authorize_member/")
-    fun getSecretaryId(@Body requestBody: Map<String, String>): Call<SecretaryIdResponse>
+    @GET("/api/secretary/")
+    fun getSecretaryId(
+        @Query("name") name: String,
+        @Query("patronymic") patronymic: String,
+        @Query("surname") surname: String
+    ): Call<SecretaryIdResponse>
+
 
 
     @POST("api/users/login/")
