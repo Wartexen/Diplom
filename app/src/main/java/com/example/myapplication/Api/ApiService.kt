@@ -1,20 +1,19 @@
 package com.example.myapplication.Api
-import com.example.myapplication.Models.Commission
 import com.example.myapplication.Models.Requests.CommissionScheduleRequest
 import com.example.myapplication.Models.DefenseSchedule
 import com.example.myapplication.Models.Requests.GradeRequest
-import com.example.myapplication.Models.Requests.GradeResponse
+import com.example.myapplication.Models.Response.GradeResponse
 import com.example.myapplication.Models.Project
-import com.example.myapplication.Models.Requests.ProjectStatusResponse
+import com.example.myapplication.Models.Response.ProjectStatusResponse
 import com.example.myapplication.Models.Question
 import com.example.myapplication.Models.Requests.QuestionRequest
 import com.example.myapplication.Models.Auth.SecretaryIdResponse
-import com.example.myapplication.Models.Auth.SecretaryResponse
 import com.example.myapplication.Models.Requests.ProjectStatusUpdateRequest
 import com.example.myapplication.Models.Requests.ProjectTimeRequest
+import com.example.myapplication.Models.Response.CommissionResponse
 import com.example.myapplication.Models.Response.SecretarySpecializationResponse
 import com.example.myapplication.Models.Student
-import com.example.myapplication.Models.Requests.UploadResponse
+import com.example.myapplication.Models.Response.UploadResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Call
@@ -55,9 +54,6 @@ interface ApiService {
         @Query("surname") surname: String
     ): Call<SecretaryIdResponse>
 
-    @POST("api/users/login/")
-    fun authenticateUser(@Body requestBody: Map<String, String>): Call<SecretaryResponse>
-
     @POST("api/questions/create_question/")
     fun createQuestion(@Body request: QuestionRequest): Call<Question>
 
@@ -77,8 +73,11 @@ interface ApiService {
         @Query("ID_Secretary") secretaryId: Int
     ): Call<List<SecretarySpecializationResponse>>
 
-    @GET("api/users/commissions/")
-    fun getCommissionsBySecretary(@Query("secretary_id") secretaryId: Int): Call<List<Commission>>
+    @GET("api/commissions/")
+    fun getCommissionsBySecretary(
+        @Query("ID_Member") secretaryId: Int,
+        @Query("Role") role: String
+    ): Call<List<CommissionResponse>>
 
     @GET("api/defenses/today/")
     fun getTodayDefensesBySpecialization(@Query("specialization_id") commissionId: Int, @Query("date") date: String): Call<List<DefenseSchedule>>

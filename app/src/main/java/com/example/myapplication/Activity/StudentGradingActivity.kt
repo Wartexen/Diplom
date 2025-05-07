@@ -1,7 +1,6 @@
 package com.example.myapplication.Activity
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ProgressBar
@@ -15,7 +14,7 @@ import com.example.myapplication.Api.ApiService
 import com.example.myapplication.Models.Project
 import com.example.myapplication.Models.ProjectWithStudents
 import com.example.myapplication.Models.Requests.GradeRequest
-import com.example.myapplication.Models.Requests.GradeResponse
+import com.example.myapplication.Models.Response.GradeResponse
 import com.example.myapplication.Models.Student
 import com.example.myapplication.Models.StudentGrade
 import com.example.myapplication.R

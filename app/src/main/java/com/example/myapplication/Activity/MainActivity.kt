@@ -232,24 +232,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun fetchSpecializations(apiService: ApiService, secretaryId: Int) {
         apiService.getSecretarySpecializations(secretaryId).enqueue(createCallback { responses ->
-            this.specializationsList = responses.mapNotNull { it.ID_Specialization } // Извлекаем Specialization
-            val specializationNames = listOf("Выберите направление") + this.specializationsList.map { it.Name ?: "" } // Обработка имени
+            this.specializationsList = responses.mapNotNull { it.ID_Specialization }
+            val specializationNames = listOf("Выберите направление") + this.specializationsList.map { it.Name ?: "" }
             updateSpinnerDpp(specializationNames)
         })
     }
 
-
-
-
-    private fun fetchCommissions(apiService: ApiService, secretaryId: Int, specializationId: Int) {
-        apiService.getCommissionsBySecretary(secretaryId).enqueue(createCallback { commissions ->
-            this.commissionsList = commissions
-            val commissionNames = listOf("Выберите комиссию") + commissions.map { it.Name }
-            updateSpinnerCommission(commissionNames)
-            spinnerCommission.isEnabled = true
-        })
-    }
-
+   private fun fetchCommissions(apiService: ApiService, secretaryId: Int, specializationId: Int) {
+       apiService.getCommissionsBySecretary(secretaryId, "Секретарь").enqueue(createCallback { responses ->
+           this.commissionsList =  responses.mapNotNull { it.ID_Commission }
+           val commissionNames = listOf("Выберите комиссию") + this.commissionsList.map { it.Name ?: "" }
+           updateSpinnerCommission(commissionNames)
+           spinnerCommission.isEnabled = true
+       })
+   }
     private fun fetchDefenseSchedule(apiService: ApiService, specialization_id: Int) {
         val date = "2024-12-21"
         apiService.getTodayDefensesBySpecialization(specialization_id, date).enqueue(createCallback { schedules ->

@@ -24,7 +24,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import com.example.myapplication.Models.Requests.UploadResponse
+import com.example.myapplication.Models.Response.UploadResponse
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import android.Manifest
@@ -41,7 +41,7 @@ import com.example.myapplication.R
 import com.example.myapplication.Adapter.StudentAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.EditText
-import com.example.myapplication.Models.Requests.ProjectStatusResponse
+import com.example.myapplication.Models.Response.ProjectStatusResponse
 import com.example.myapplication.Models.Requests.ProjectStatusUpdateRequest
 import com.example.myapplication.Models.Requests.ProjectTimeRequest
 import com.example.myapplication.Models.Requests.QuestionRequest

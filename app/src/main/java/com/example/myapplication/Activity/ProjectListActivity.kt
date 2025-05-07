@@ -17,7 +17,7 @@ import android.widget.Toast
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.myapplication.Activity.ProjectDetailsActivity
 import com.example.myapplication.Adapter.ProjectAdapter
-import com.example.myapplication.Models.Requests.ProjectStatusResponse
+import com.example.myapplication.Models.Response.ProjectStatusResponse
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory

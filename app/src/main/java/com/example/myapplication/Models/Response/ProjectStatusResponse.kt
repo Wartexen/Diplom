@@ -1,4 +1,4 @@
-package com.example.myapplication.Models.Requests
+package com.example.myapplication.Models.Response
 
 data class ProjectStatusResponse(
     val project_id: Int,
