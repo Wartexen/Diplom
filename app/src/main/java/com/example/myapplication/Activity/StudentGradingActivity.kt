@@ -1,5 +1,6 @@
 package com.example.myapplication.Activity
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -82,7 +83,7 @@ class StudentGradingActivity : AppCompatActivity() {
     }
 
     private fun getProjects(apiService: ApiService, defenseScheduleId: Int) {
-        apiService.getProjectsBydefense_schedule_id(defenseScheduleId).enqueue(object : Callback<List<Project>> {
+        apiService.getProjectsByDefenseSchedule(defenseScheduleId).enqueue(object : Callback<List<Project>> {
             override fun onResponse(call: Call<List<Project>>, response: Response<List<Project>>) {
                 if (response.isSuccessful) {
                     val projects = response.body() ?: emptyList()
@@ -94,7 +95,7 @@ class StudentGradingActivity : AppCompatActivity() {
 
                     var loadedProjects = 0
                     for (project in projects) {
-                        val projectId = project.ID.toInt()
+                        val projectId = project.ID
                         val projectWithStudents = ProjectWithStudents(project.Title)
                         projectsWithStudents.add(projectWithStudents)
                         getStudentsByProject(apiService, projectId, projectWithStudents) {
@@ -177,8 +178,8 @@ class StudentGradingActivity : AppCompatActivity() {
         for (studentGrade in grades) {
             try {
                 val gradeRequest = GradeRequest(
-                    student_id = studentGrade.id,
-                    grade = studentGrade.grade
+                    ID_Student = studentGrade.id,
+                    Grade = studentGrade.grade
                 )
                 apiService.gradeStudent(gradeRequest).enqueue(object : Callback<GradeResponse> {
                     override fun onResponse(call: Call<GradeResponse>, response: Response<GradeResponse>) {
@@ -212,6 +213,7 @@ class StudentGradingActivity : AppCompatActivity() {
 
                 if (errorCount == 0) {
                     Toast.makeText(this, "Все оценки успешно сохранены", Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(this@StudentGradingActivity, MainActivity::class.java))
                     finish()
                 } else {
                     Toast.makeText(this, "Ошибка при сохранении $errorCount оценок", Toast.LENGTH_SHORT).show()

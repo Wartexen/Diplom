@@ -218,22 +218,42 @@ class ProjectDetailsActivity : AppCompatActivity() {
         })
     }
 
-    private fun updateProjectStatus(newStatus: Boolean) {
-        val request = ProjectStatusUpdateRequest(project.ID, newStatus)
 
-        apiService.updateProjectStatus(request).enqueue(object : Callback<ProjectStatusResponse> {
-            override fun onResponse(call: Call<ProjectStatusResponse>, response: Response<ProjectStatusResponse>) {
-                if (response.isSuccessful) {
-                    projectStatus = newStatus
-                } else {
-                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при обновлении статуса проекта", Toast.LENGTH_SHORT).show()
-                }
-            }
-            override fun onFailure(call: Call<ProjectStatusResponse>, t: Throwable) {
-                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при обновлении статуса проекта", Toast.LENGTH_SHORT).show()
-            }
-        })
-    }
+//    private fun updateProjectStatus(newStatus: Boolean) {
+//        val request = ProjectStatusUpdateRequest(newStatus)
+//
+//        apiService.updateProjectStatus(project.ID, request).enqueue(object : Callback<ProjectStatusResponse> {
+//            override fun onResponse(call: Call<ProjectStatusResponse>, response: Response<ProjectStatusResponse>) {
+//                if (response.isSuccessful) {
+//                    projectStatus = newStatus
+//                    Log.d("ProjectDetails", "Статус проекта успешно обновлен")
+//                } else {
+//                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при обновлении статуса проекта", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//
+//            override fun onFailure(call: Call<ProjectStatusResponse>, t: Throwable) {
+//                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при обновлении статуса проекта", Toast.LENGTH_SHORT).show()
+//            }
+//        })
+//    }
+
+//    private fun updateProjectStatus(newStatus: Boolean) {
+//        val request = ProjectStatusUpdateRequest(project.ID, newStatus)
+//
+//        apiService.updateProjectStatus(request).enqueue(object : Callback<ProjectStatusResponse> {
+//            override fun onResponse(call: Call<ProjectStatusResponse>, response: Response<ProjectStatusResponse>) {
+//                if (response.isSuccessful) {
+//                    projectStatus = newStatus
+//                } else {
+//                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при обновлении статуса проекта", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//            override fun onFailure(call: Call<ProjectStatusResponse>, t: Throwable) {
+//                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при обновлении статуса проекта", Toast.LENGTH_SHORT).show()
+//            }
+//        })
+//    }
 
     private fun updateUIStatus() {
         if (projectStatus) {
@@ -260,7 +280,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
             .setMessage("Вы уверены, что хотите начать защиту проекта? Время начала: $currentTime")
             .setPositiveButton("Да") { _, _ ->
                 sendDefenseStartTime(currentTime)
-                updateProjectStatus(true)
+                //updateProjectStatus(true)
                 startDefenseContainer.visibility = View.GONE
                 mainContentContainer.visibility = View.VISIBLE
                 actionMenuButton.visibility = View.VISIBLE
@@ -328,7 +348,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     remove(PREF_DEFENSE_TIME + project.ID)
                     apply()
                 }
-                updateProjectStatus(false)
+                //updateProjectStatus(false)
                 Toast.makeText(this, "Защита отменена", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Нет", null)

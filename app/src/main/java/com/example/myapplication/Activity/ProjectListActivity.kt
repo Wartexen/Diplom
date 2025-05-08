@@ -24,7 +24,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.myapplication.Activity.BitrixAuthActivity
 import com.example.myapplication.Activity.ProjectDetailsActivity
 import com.example.myapplication.Adapter.ProjectAdapter
-import com.example.myapplication.Models.Response.ProjectStatusResponse
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import retrofit2.Retrofit
