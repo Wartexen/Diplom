@@ -9,7 +9,8 @@ data class Student(
     val Name: String,
     val Patronymic: String,
     val ID_Specialization: Int,
-    val ID_Project: Int
+    val ID_Project: Int,
+    val grade: String? = null
 ) :  Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
@@ -18,8 +19,10 @@ data class Student(
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readInt(),
-        parcel.readInt()
-    )
+        parcel.readInt(),
+        parcel.readString()
+    ) {
+    }
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeInt(ID)
@@ -29,6 +32,7 @@ data class Student(
         parcel.writeString(Patronymic)
         parcel.writeInt(ID_Specialization)
         parcel.writeInt(ID_Project)
+        parcel.writeString(grade)
     }
 
     override fun describeContents(): Int {

@@ -7,13 +7,16 @@ data class Project(
     val ID: Int,
     val Title: String,
     val Supervisor: String,
-    val Status: Boolean = false
+    val Status: Boolean = false,
+    val DefenseStartTime: String? = null
+
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
         parcel.readString().toString(),
         parcel.readString().toString(),
-        parcel.readByte() != 0.toByte()
+        parcel.readByte() != 0.toByte(),
+        parcel.readString()
     ) {
     }
 
@@ -22,6 +25,7 @@ data class Project(
         parcel.writeString(Title)
         parcel.writeString(Supervisor)
         parcel.writeByte(if (Status) 1 else 0)
+        parcel.writeString(DefenseStartTime)
     }
 
     override fun describeContents(): Int {

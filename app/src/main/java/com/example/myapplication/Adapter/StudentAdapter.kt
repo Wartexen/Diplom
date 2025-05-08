@@ -14,6 +14,8 @@ class StudentAdapter(private val students: List<Student>) :
     class StudentViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val studentName: TextView = view.findViewById(R.id.studentName)
         val studentGroup: TextView = view.findViewById(R.id.studentGroup)
+        val studentGrade: TextView? = view.findViewById(R.id.studentGrade)
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): StudentViewHolder {
@@ -26,8 +28,16 @@ class StudentAdapter(private val students: List<Student>) :
         val student = students[position]
 
         val fullName = "${student.Surname ?: ""} ${student.Name ?: ""} ${student.Patronymic ?: ""}".trim()
-        holder.studentName.text = fullName
-        holder.studentGroup.text = "Группа: ${student.ID_Group.Name}"
+        holder.studentName.text = if (fullName.isNotEmpty()) fullName else "Имя не указано"
+        holder.studentGroup.text = "Группа: ${student.ID_Group?.Name ?: "Не указана"}"
+        holder.studentGrade?.let { gradeView ->
+            if (student.grade != null && student.grade.isNotEmpty()) {
+                gradeView.visibility = View.VISIBLE
+                gradeView.text = "Оценка: ${student.grade}"
+            } else {
+                gradeView.visibility = View.GONE
+            }
+        }
     }
 
     override fun getItemCount() = students.size

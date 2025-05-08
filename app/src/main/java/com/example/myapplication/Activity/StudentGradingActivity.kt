@@ -118,19 +118,20 @@ class StudentGradingActivity : AppCompatActivity() {
         })
     }
 
+
     private fun getStudentsByProject(apiService: ApiService, projectId: Int, projectWithStudents: ProjectWithStudents, callback: () -> Unit) {
         apiService.getStudentsByProject(projectId).enqueue(object : Callback<List<Student>> {
             override fun onResponse(call: Call<List<Student>>, response: Response<List<Student>>) {
                 if (response.isSuccessful) {
                     val students = response.body() ?: emptyList()
                     for (student in students) {
-                        val fullName = "${student.Surname ?: ""} ${student.Name ?: ""} ${student.Patronymic ?: ""}"
+                        val fullName = "${student.Surname ?: ""} ${student.Name ?: ""} ${student.Patronymic ?: ""}".trim()
                         val studentGrade = StudentGrade(
                             id = student.ID,
                             name = fullName,
                             projectTitle = projectWithStudents.projectTitle,
-                            grade = "",
-                            //groupName = student.GroupName ?: "Группа не указана"
+                            grade = student.grade ?: "",
+                            groupName = student.ID_Group?.Name ?: ""
                         )
                         projectWithStudents.students.add(studentGrade)
                     }

@@ -5,90 +5,84 @@
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
     android:background="#F5F5F5">
-    <com.google.android.material.appbar.AppBarLayout
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:elevation="0dp">
+        android:background="#3A8890"
+        android:elevation="4dp"
+        android:minHeight="?attr/actionBarSize"
+        android:paddingVertical="8dp">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#3A8890"
-            android:elevation="4dp"
-            android:minHeight="?attr/actionBarSize"
-            android:paddingVertical="8dp">
-
+            android:orientation="vertical">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-                <LinearLayout
-                    android:layout_width="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp">
+
+                <ImageView
+                    android:id="@+id/profileIcon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_profile"
+                    android:contentDescription="@string/profile_icon_desc"
+                    app:tint="@android:color/white" />
+
+                <TextView
+                    android:id="@+id/userName"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingStart="16dp">
-
-                    <ImageView
-                        android:id="@+id/profileIcon"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_profile"
-                        android:contentDescription="@string/profile_icon_desc"
-                        app:tint="@android:color/white" />
-
-                    <TextView
-                        android:id="@+id/userName"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:textColor="@android:color/white"
-                        android:textSize="16sp"
-                        android:maxLines="1"
-                        android:ellipsize="end"
-                        tools:text=" "/>
-                </LinearLayout>
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp">
-
-                    <TextView
-                        android:id="@+id/projectNameTextView"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:textColor="@android:color/white"
-                        android:textSize="20sp"
-                        android:gravity="center"
-                        android:textStyle="bold"
-                        android:maxLines="5"
-                        android:ellipsize="end"
-                        android:lineSpacingExtra="2dp"
-                        android:layout_toStartOf="@id/actionMenuButton"/>
-
-                    <ImageView
-                        android:id="@+id/actionMenuButton"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_more_vert"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerVertical="true"
-                        android:layout_marginEnd="16dp"
-                        android:visibility="gone"
-                        android:contentDescription="Меню действий"
-                        app:tint="@android:color/white" />
-                </RelativeLayout>
+                    android:layout_marginStart="8dp"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    tools:text=" "/>
             </LinearLayout>
-        </androidx.appcompat.widget.Toolbar>
-    </com.google.android.material.appbar.AppBarLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp">
+
+                <TextView
+                    android:id="@+id/projectNameTextView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@android:color/white"
+                    android:textSize="20sp"
+                    android:gravity="center"
+                    android:textStyle="bold"
+                    android:maxLines="5"
+                    android:ellipsize="end"
+                    android:lineSpacingExtra="2dp"
+                    android:layout_toStartOf="@id/actionMenuButton"/>
+
+                <ImageView
+                    android:id="@+id/actionMenuButton"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_more_vert"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="16dp"
+                    android:visibility="gone"
+                    android:contentDescription="Меню действий"
+                    app:tint="@android:color/white" />
+            </RelativeLayout>
+        </LinearLayout>
+    </androidx.appcompat.widget.Toolbar>
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:layout_marginTop="?attr/actionBarSize"
         android:paddingTop="8dp"
         android:clipToPadding="false">
 

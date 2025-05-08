@@ -41,8 +41,6 @@ import com.example.myapplication.R
 import com.example.myapplication.Adapter.StudentAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.EditText
-import com.example.myapplication.Models.Response.ProjectStatusResponse
-import com.example.myapplication.Models.Requests.ProjectStatusUpdateRequest
 import com.example.myapplication.Models.Requests.ProjectTimeRequest
 import com.example.myapplication.Models.Requests.QuestionRequest
 import com.example.myapplication.Models.Requests.QuestionUpdateRequest
@@ -81,10 +79,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
     private var isRecording = false
     private var defenseStarted = false
     private var projectStatus = false
-    companion object {
-        private const val PREF_DEFENSE_STARTED = "defense_started_"
-        private const val PREF_DEFENSE_TIME = "defense_time_"
-    }
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -148,6 +143,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
     }
 
 
+
     private fun showStartRecordingDialog() {
         MaterialAlertDialogBuilder(this)
             .setTitle("Начать запись")
@@ -202,10 +198,10 @@ class ProjectDetailsActivity : AppCompatActivity() {
         apiService.getProjectStatus(projectId).enqueue(object : Callback<Project> {
             override fun onResponse(call: Call<Project>, response: Response<Project>) {
                 if (response.isSuccessful) {
-                    val statusResponse = response.body()
-                    if (statusResponse != null) {
-                        projectStatus = statusResponse.Status
-                        updateUIStatus()
+                    val projectResponse = response.body()
+                    if (projectResponse != null) {
+                        project = projectResponse // Обновляем объект проекта
+                        projectStatus = projectResponse.Status
                     }
                 } else {
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка при получении статуса проекта", Toast.LENGTH_SHORT).show()
@@ -219,59 +215,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
     }
 
 
-//    private fun updateProjectStatus(newStatus: Boolean) {
-//        val request = ProjectStatusUpdateRequest(newStatus)
-//
-//        apiService.updateProjectStatus(project.ID, request).enqueue(object : Callback<ProjectStatusResponse> {
-//            override fun onResponse(call: Call<ProjectStatusResponse>, response: Response<ProjectStatusResponse>) {
-//                if (response.isSuccessful) {
-//                    projectStatus = newStatus
-//                    Log.d("ProjectDetails", "Статус проекта успешно обновлен")
-//                } else {
-//                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при обновлении статуса проекта", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<ProjectStatusResponse>, t: Throwable) {
-//                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при обновлении статуса проекта", Toast.LENGTH_SHORT).show()
-//            }
-//        })
-//    }
-
-//    private fun updateProjectStatus(newStatus: Boolean) {
-//        val request = ProjectStatusUpdateRequest(project.ID, newStatus)
-//
-//        apiService.updateProjectStatus(request).enqueue(object : Callback<ProjectStatusResponse> {
-//            override fun onResponse(call: Call<ProjectStatusResponse>, response: Response<ProjectStatusResponse>) {
-//                if (response.isSuccessful) {
-//                    projectStatus = newStatus
-//                } else {
-//                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при обновлении статуса проекта", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//            override fun onFailure(call: Call<ProjectStatusResponse>, t: Throwable) {
-//                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при обновлении статуса проекта", Toast.LENGTH_SHORT).show()
-//            }
-//        })
-//    }
-
-    private fun updateUIStatus() {
-        if (projectStatus) {
-            startDefenseContainer.visibility = View.GONE
-            mainContentContainer.visibility = View.VISIBLE
-            actionMenuButton.visibility = View.VISIBLE
-
-            sendQuestionsRequest(project.ID)
-            val defenseTime = sharedPref.getString(PREF_DEFENSE_TIME + project.ID, "")
-            if (defenseTime?.isNotEmpty() == true) {
-                Toast.makeText(this, "Защита началась в $defenseTime", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            startDefenseContainer.visibility = View.VISIBLE
-            mainContentContainer.visibility = View.GONE
-            actionMenuButton.visibility = View.GONE
-        }
-    }
 
     private fun startDefense() {
         val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
@@ -287,13 +230,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
 
                 sendQuestionsRequest(project.ID)
 
-                sharedPref.edit().apply {
-                    putBoolean(PREF_DEFENSE_STARTED + project.ID, true)
-                    putString(PREF_DEFENSE_TIME + project.ID, currentTime)
-                    apply()
-                }
-
-                Toast.makeText(this, "Защита началась в $currentTime", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Отмена", null)
             .show()
@@ -342,13 +278,8 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 startDefenseContainer.visibility = View.VISIBLE
                 actionMenuButton.visibility = View.GONE
                 defenseStarted = false
-                sendDefenseStartTime("00:00:00")
-                sharedPref.edit().apply {
-                    remove(PREF_DEFENSE_STARTED + project.ID)
-                    remove(PREF_DEFENSE_TIME + project.ID)
-                    apply()
-                }
-                //updateProjectStatus(false)
+                sendDefenseStartTime(null.toString())
+
                 Toast.makeText(this, "Защита отменена", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Нет", null)
@@ -441,7 +372,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     .setMessage("Вы уверены, что хотите изменить время начала защиты на $selectedTime?")
                     .setPositiveButton("Да") { _, _ ->
                         sendDefenseStartTime(selectedTime)
-                        sharedPref.edit().putString(PREF_DEFENSE_TIME + project.ID, selectedTime).apply()
                         Toast.makeText(this, "Время начала защиты изменено на $selectedTime", Toast.LENGTH_SHORT).show()
                     }
                     .setNegativeButton("Отмена", null)
