@@ -1,4 +1,5 @@
 package com.example.myapplication.Activity
+
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
 import android.os.Handler
@@ -24,70 +25,87 @@ import retrofit2.Call
 import retrofit2.Callback
 import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import com.example.myapplication.Models.Response.UploadResponse
+
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Button
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.PopupMenu
 import com.example.myapplication.Adapter.QuestionAdapter
 import com.example.myapplication.R
 import com.example.myapplication.Adapter.StudentAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.EditText
-import com.example.myapplication.Models.Requests.ProjectTimeRequest
 import com.example.myapplication.Models.Requests.QuestionRequest
+import com.example.myapplication.Models.Requests.ProjectTimeRequest
 import com.example.myapplication.Models.Requests.QuestionUpdateRequest
+import com.example.myapplication.Models.Response.UploadResponse
+import java.io.FileOutputStream
+import java.io.IOException
+import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.Calendar
 
 class ProjectDetailsActivity : AppCompatActivity() {
-    private lateinit var apiService: ApiService
-
-    private lateinit var questionAdapter: QuestionAdapter
 
     private lateinit var micButton: ImageView
-    private lateinit var profileIcon: ImageView
-    private lateinit var actionMenuButton: ImageView
+    private lateinit var uploadAudioButton: ImageView
     private lateinit var recordingTimeTextView: TextView
-    private lateinit var userName: TextView
+    private lateinit var savedAudioInfoTextView: TextView
     private lateinit var studentsRecyclerView: RecyclerView
     private lateinit var questionsRecyclerView: RecyclerView
-    private lateinit var startDefenseContainer: View
-    private lateinit var mainContentContainer: View
-
+    private var isRecording = false
     private val handler = Handler(Looper.getMainLooper())
+    private lateinit var apiService: ApiService
+    private lateinit var project: Project
+    private var mediaRecorder: MediaRecorder? = null
     private lateinit var toolbar: androidx.appcompat.widget.Toolbar
+    private lateinit var userName: TextView
+    private lateinit var profileIcon: ImageView
     private lateinit var sharedPref: SharedPreferences
     private var audioFilePath: String = ""
     private var recordingTime: Int = 0
-    private lateinit var project: Project
     private lateinit var recordingRunnable: Runnable
     private val REQUEST_RECORD_AUDIO_PERMISSION = 200
+    private lateinit var questionAdapter: QuestionAdapter
 
+    private lateinit var startDefenseContainer: View
+    private lateinit var mainContentContainer: View
     private lateinit var btnStartDefense: Button
-    private var mediaRecorder: MediaRecorder? = null
-
-    private var isRecording = false
-    private var defenseStarted = false
+    private lateinit var actionMenuButton: ImageView
     private var projectStatus = false
 
-
-
+    private val savedAudioFiles = mutableListOf<String>()
+    companion object { private const val SAVED_AUDIO_FILES_KEY = "saved_audio_files" }
+    private val getAudioContent = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            val audioFile = copyUriToFile(it)
+            if (audioFile != null) {
+                uploadAudioFile(audioFile.absolutePath)
+            } else {
+                Toast.makeText(this, "Не удалось загрузить аудиофайл", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_project_details)
 
+        // Initialize views
         micButton = findViewById(R.id.micButton)
+        uploadAudioButton = findViewById(R.id.uploadAudioButton)
         recordingTimeTextView = findViewById(R.id.recordingTime)
+        savedAudioInfoTextView = findViewById(R.id.savedAudioInfo)
         studentsRecyclerView = findViewById(R.id.studentsRecyclerView)
         questionsRecyclerView = findViewById(R.id.questionsRecyclerView)
         startDefenseContainer = findViewById(R.id.startDefenseContainer)
@@ -99,7 +117,11 @@ class ProjectDetailsActivity : AppCompatActivity() {
         toolbar = findViewById(R.id.toolbar)
         userName = findViewById(R.id.userName)
         profileIcon = findViewById(R.id.profileIcon)
+
+        loadSavedAudioFiles()
+
         checkAuthStatus()
+
         val retrofit = Retrofit.Builder()
             .baseUrl("http://10.0.2.2:8000/")
             .addConverterFactory(GsonConverterFactory.create())
@@ -112,10 +134,9 @@ class ProjectDetailsActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.projectLeaderTextView).text = project.Supervisor
 
         val projectId = project.ID
+
         if (projectId != null) {
             getStudentsByProject(projectId)
-            sendQuestionsRequest(projectId)
-
             getProjectStatus(projectId)
         } else {
             Toast.makeText(this, "Неверный ID проекта", Toast.LENGTH_SHORT).show()
@@ -128,6 +149,11 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 showStartRecordingDialog()
             }
         }
+
+        uploadAudioButton.setOnClickListener {
+            showAudioFilePickerDialog()
+        }
+
         val fabAddQuestion = findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fabAddQuestion)
         fabAddQuestion.setOnClickListener {
             showAddQuestionDialog()
@@ -142,7 +168,82 @@ class ProjectDetailsActivity : AppCompatActivity() {
         }
     }
 
+    private fun loadSavedAudioFiles() {
+        val savedFilesSet = sharedPref.getStringSet(SAVED_AUDIO_FILES_KEY, setOf()) ?: setOf()
+        savedAudioFiles.clear()
+        savedAudioFiles.addAll(savedFilesSet.filter { File(it).exists() })
 
+        if (savedAudioFiles.isNotEmpty()) {
+            savedAudioInfoTextView.visibility = View.VISIBLE
+            savedAudioInfoTextView.text = "Сохранено аудиозаписей: ${savedAudioFiles.size}"
+        } else {
+            savedAudioInfoTextView.visibility = View.GONE
+        }
+    }
+
+    private fun saveSavedAudioFilesList() {
+        sharedPref.edit().putStringSet(SAVED_AUDIO_FILES_KEY, savedAudioFiles.toSet()).apply()
+    }
+
+    private fun showAudioFilePickerDialog() {
+        if (savedAudioFiles.isEmpty()) {
+            getAudioContent.launch("audio/*")
+        } else {
+            val options = arrayOf("Выбрать новый файл", "Использовать сохраненный файл")
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Загрузка аудиофайла")
+                .setItems(options) { _, which ->
+                    when (which) {
+                        0 -> getAudioContent.launch("audio/*")
+                        1 -> showSavedAudioFilesDialog()
+                    }
+                }
+                .show()
+        }
+    }
+
+    private fun showSavedAudioFilesDialog() {
+        val fileNames = savedAudioFiles.map {
+            val file = File(it)
+            val date = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+                .format(Date(file.lastModified()))
+
+            val projectTitle = project.Title.ifEmpty { "Без названия" }
+            "'$projectTitle' от $date (${file.length() / 1024} KB)"
+        }.toTypedArray()
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Выберите аудиозапись")
+            .setItems(fileNames) { _, which ->
+                val selectedFile = savedAudioFiles[which]
+                uploadAudioFile(selectedFile)
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun copyUriToFile(uri: Uri): File? {
+
+            val inputStream: InputStream? = contentResolver.openInputStream(uri)
+            if (inputStream != null) {
+                val fileName = "uploaded_audio_${System.currentTimeMillis()}.3gp"
+                val outputFile = File(externalCacheDir, fileName)
+
+                FileOutputStream(outputFile).use { outputStream ->
+                    val buffer = ByteArray(4 * 1024) // 4KB buffer
+                    var read: Int
+                    while (inputStream.read(buffer).also { read = it } != -1) {
+                        outputStream.write(buffer, 0, read)
+                    }
+                    outputStream.flush()
+                }
+
+                inputStream.close()
+                return outputFile
+            }
+
+        return null
+    }
 
     private fun showStartRecordingDialog() {
         MaterialAlertDialogBuilder(this)
@@ -161,13 +262,48 @@ class ProjectDetailsActivity : AppCompatActivity() {
             .setMessage("Что вы хотите сделать с текущей записью?")
             .setPositiveButton("Сохранить и отправить") { _, _ ->
                 stopRecording()
-                uploadAudioFile()
+                val savedFilePath = saveAudioFileToDevice()
+                if (savedFilePath != null) {
+                    savedAudioFiles.add(savedFilePath)
+                    saveSavedAudioFilesList()
+
+                    savedAudioInfoTextView.visibility = View.VISIBLE
+                    savedAudioInfoTextView.text = "Сохранено аудиозаписей: ${savedAudioFiles.size}"
+                    uploadAudioFile(audioFilePath)
+                }
             }
             .setNeutralButton("Отменить запись") { _, _ ->
                 cancelRecording()
             }
             .setNegativeButton("Продолжить запись", null)
             .show()
+    }
+
+    private fun saveAudioFileToDevice(): String? {
+        try {
+            val sourceFile = File(audioFilePath)
+            if (!sourceFile.exists()) {
+                Toast.makeText(this, "Файл записи не найден", Toast.LENGTH_SHORT).show()
+                return null
+            }
+
+            val audioDir = File(filesDir, "saved_audio")
+            if (!audioDir.exists()) {
+                audioDir.mkdirs()
+            }
+
+            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val fileName = "audio_${project.ID}_$timestamp.3gp"
+            val destinationFile = File(audioDir, fileName)
+
+            sourceFile.copyTo(destinationFile, overwrite = true)
+            Toast.makeText(this, "Аудиозапись сохранена на устройстве", Toast.LENGTH_SHORT).show()
+            return destinationFile.absolutePath
+
+        } catch (e: IOException) {
+            Toast.makeText(this, "Ошибка при сохранении аудиозаписи", Toast.LENGTH_SHORT).show()
+            return null
+        }
     }
 
     private fun cancelRecording() {
@@ -202,6 +338,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     if (projectResponse != null) {
                         project = projectResponse // Обновляем объект проекта
                         projectStatus = projectResponse.Status
+
                     }
                 } else {
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка при получении статуса проекта", Toast.LENGTH_SHORT).show()
@@ -218,18 +355,18 @@ class ProjectDetailsActivity : AppCompatActivity() {
 
     private fun startDefense() {
         val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+
         MaterialAlertDialogBuilder(this)
             .setTitle("Начать защиту")
             .setMessage("Вы уверены, что хотите начать защиту проекта? Время начала: $currentTime")
             .setPositiveButton("Да") { _, _ ->
                 sendDefenseStartTime(currentTime)
-                //updateProjectStatus(true)
+
                 startDefenseContainer.visibility = View.GONE
                 mainContentContainer.visibility = View.VISIBLE
                 actionMenuButton.visibility = View.VISIBLE
 
                 sendQuestionsRequest(project.ID)
-
             }
             .setNegativeButton("Отмена", null)
             .show()
@@ -250,9 +387,11 @@ class ProjectDetailsActivity : AppCompatActivity() {
             }
         })
     }
+
     private fun showActionMenu(view: View) {
         val popup = PopupMenu(this, view)
         popup.menuInflater.inflate(R.menu.menu_defense, popup.menu)
+
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.action_change_time -> {
@@ -266,6 +405,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 else -> false
             }
         }
+
         popup.show()
     }
 
@@ -277,8 +417,10 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 mainContentContainer.visibility = View.GONE
                 startDefenseContainer.visibility = View.VISIBLE
                 actionMenuButton.visibility = View.GONE
-                defenseStarted = false
-                sendDefenseStartTime(null.toString())
+
+                sendDefenseStartTime("null")
+
+                project = project.copy(DefenseStartTime = null)
 
                 Toast.makeText(this, "Защита отменена", Toast.LENGTH_SHORT).show()
             }
@@ -292,7 +434,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
             startActivity(Intent(this, BitrixAuthActivity::class.java))
             finish()
         } else {
-           val fullName = sharedPref.getString("fullName", "") ?: ""
+            val fullName = sharedPref.getString("fullName", "") ?: ""
             userName.text = formatUserName(fullName)
 
             profileIcon.setOnClickListener {
@@ -300,6 +442,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun formatUserName(fullName: String): String {
         return try {
             val parts = fullName.split(" ")
@@ -312,10 +455,12 @@ class ProjectDetailsActivity : AppCompatActivity() {
             fullName
         }
     }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
         return true
     }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_profile -> {
@@ -325,6 +470,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
+
     private fun showProfilePopup(anchor: View) {
         val popup = PopupMenu(this, anchor)
         popup.menuInflater.inflate(R.menu.profile_menu, popup.menu)
@@ -340,6 +486,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
         }
         popup.show()
     }
+
     private fun showLogoutConfirmation() {
         MaterialAlertDialogBuilder(this)
             .setTitle("Выход из аккаунта")
@@ -350,38 +497,13 @@ class ProjectDetailsActivity : AppCompatActivity() {
             .setNegativeButton("Отмена", null)
             .show()
     }
+
     private fun logout() {
         sharedPref.edit().clear().apply()
         val intent = Intent(this, BitrixAuthActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
-    }
-
-
-    private fun showChangeTimeDialog() {
-        val calendar = Calendar.getInstance()
-        val hour = calendar.get(Calendar.HOUR_OF_DAY)
-        val minute = calendar.get(Calendar.MINUTE)
-        val timePickerDialog = android.app.TimePickerDialog(
-            this,
-            { _, selectedHour, selectedMinute ->
-                val selectedTime = String.format("%02d:%02d:00", selectedHour, selectedMinute)
-                MaterialAlertDialogBuilder(this)
-                    .setTitle("Изменить время начала")
-                    .setMessage("Вы уверены, что хотите изменить время начала защиты на $selectedTime?")
-                    .setPositiveButton("Да") { _, _ ->
-                        sendDefenseStartTime(selectedTime)
-                        Toast.makeText(this, "Время начала защиты изменено на $selectedTime", Toast.LENGTH_SHORT).show()
-                    }
-                    .setNegativeButton("Отмена", null)
-                    .show()
-            },
-            hour,
-            minute,
-            true
-        )
-        timePickerDialog.show()
     }
 
     private fun getStudentsByProject(projectId: Int) {
@@ -403,7 +525,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
         })
     }
 
-   private fun sendQuestionsRequest(projectId: Int) {
+    private fun sendQuestionsRequest(projectId: Int) {
         apiService.getQuestionsByProject(projectId).enqueue(object : Callback<List<Question>> {
             override fun onResponse(call: Call<List<Question>>, response: Response<List<Question>>) {
                 if (response.isSuccessful) {
@@ -423,10 +545,12 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 }
             }
             override fun onFailure(call: Call<List<Question>>, t: Throwable) {
+                Log.e("Network Error", t.message ?: "Неизвестная ошибка")
                 Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети", Toast.LENGTH_SHORT).show()
             }
         })
     }
+
     private fun startRecording() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), REQUEST_RECORD_AUDIO_PERMISSION)
@@ -453,6 +577,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
             releaseMediaRecorder()
         }
     }
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -472,6 +597,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
         mediaRecorder?.release()
         mediaRecorder = null
     }
+
     private fun stopRecording() {
         try {
             mediaRecorder?.apply {
@@ -487,6 +613,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
             Toast.makeText(this, "Ошибка при остановке записи", Toast.LENGTH_SHORT).show()
         }
     }
+
     private fun updateRecordingTime() {
         recordingRunnable = Runnable {
             if (isRecording) {
@@ -497,19 +624,22 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 handler.postDelayed(recordingRunnable, 1000)
             }
         }
-        handler.post(recordingRunnable)
+        handler.post(recordingRunnable) // Запускаем Runnable
     }
-    private fun uploadAudioFile() {
-        val file = File(audioFilePath)
+
+    private fun uploadAudioFile(filePath: String) {
+        val file = File(filePath)
         if (!file.exists()) {
             Toast.makeText(this, "Файл не найден", Toast.LENGTH_SHORT).show()
             return
         }
+
         Toast.makeText(this, "Отправка аудио...", Toast.LENGTH_SHORT).show()
+
         val requestFile = RequestBody.create("audio/3gp".toMediaTypeOrNull(), file)
         val body = MultipartBody.Part.createFormData("audio", file.name, requestFile)
 
-        // Получите ID проекта
+
         val projectId = project.ID
         val projectIdRequestBody = RequestBody.create("text/plain".toMediaTypeOrNull(), projectId.toString())
 
@@ -528,6 +658,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
             }
         })
     }
+
     private fun updateQuestionOnServer(questionId: Int, newText: String) {
         val updateRequest = QuestionUpdateRequest(newText)
         apiService.updateQuestion(questionId, updateRequest).enqueue(object : Callback<Question> {
@@ -598,5 +729,40 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при добавлении вопроса: ${t.message}", Toast.LENGTH_SHORT).show()
             }
         })
+    }
+
+    private fun showChangeTimeDialog() {
+        val calendar = Calendar.getInstance()
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        val minute = calendar.get(Calendar.MINUTE)
+
+        val timePickerDialog = android.app.TimePickerDialog(
+            this,
+            { _, selectedHour, selectedMinute ->
+                val selectedTime = String.format("%02d:%02d:00", selectedHour, selectedMinute)
+
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Изменить время начала")
+                    .setMessage("Вы уверены, что хотите изменить время начала защиты на $selectedTime?")
+                    .setPositiveButton("Да") { _, _ ->
+                        sendDefenseStartTime(selectedTime)
+                        project = project.copy(DefenseStartTime = selectedTime)
+
+                        Toast.makeText(this, "Время начала защиты изменено на $selectedTime", Toast.LENGTH_SHORT).show()
+                    }
+                    .setNegativeButton("Отмена", null)
+                    .show()
+            },
+            hour,
+            minute,
+            true
+        )
+
+        timePickerDialog.show()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadSavedAudioFiles()
     }
 }

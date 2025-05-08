@@ -1,5 +1,6 @@
 package com.example.myapplication.Activity
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -24,6 +25,8 @@ import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.io.File
+
 
 class StudentGradingActivity : AppCompatActivity() {
 
@@ -211,15 +214,37 @@ class StudentGradingActivity : AppCompatActivity() {
             runOnUiThread {
                 progressBar.visibility = View.GONE
                 buttonFinish.isEnabled = true
-
                 if (errorCount == 0) {
-                    Toast.makeText(this, "Все оценки успешно сохранены", Toast.LENGTH_SHORT).show()
+                    FileUtils.deleteSavedAudioFiles(this@StudentGradingActivity)
+                    Toast.makeText(
+                        this,
+                        "Все оценки успешно сохранены",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     startActivity(Intent(this@StudentGradingActivity, MainActivity::class.java))
                     finish()
                 } else {
-                    Toast.makeText(this, "Ошибка при сохранении $errorCount оценок", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this,
+                        "Ошибка при сохранении $errorCount оценок",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
+        }
+    }
+
+    object FileUtils {
+        fun deleteSavedAudioFiles(context: Context) {
+            val audioDir = File(context.filesDir, "saved_audio")
+            if (audioDir.exists() && audioDir.isDirectory) {
+                audioDir.listFiles()?.forEach { file ->
+                    file.delete()
+                }
+            }
+
+            val sharedPref = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
+            sharedPref.edit().remove("saved_audio_files").apply()
         }
     }
 }
