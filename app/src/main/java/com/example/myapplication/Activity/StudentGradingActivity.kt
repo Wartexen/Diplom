@@ -218,7 +218,7 @@ class StudentGradingActivity : AppCompatActivity() {
                     FileUtils.deleteSavedAudioFiles(this@StudentGradingActivity)
                     Toast.makeText(
                         this,
-                        "Все оценки успешно сохранены",
+                        "Все оценки успешно сохранены. Аудиофайлы удалены",
                         Toast.LENGTH_SHORT
                     ).show()
                     startActivity(Intent(this@StudentGradingActivity, MainActivity::class.java))
@@ -237,14 +237,26 @@ class StudentGradingActivity : AppCompatActivity() {
     object FileUtils {
         fun deleteSavedAudioFiles(context: Context) {
             val audioDir = File(context.filesDir, "saved_audio")
-            if (audioDir.exists() && audioDir.isDirectory) {
-                audioDir.listFiles()?.forEach { file ->
-                    file.delete()
-                }
-            }
+            deleteDirectory(audioDir)
+            deleteDirectory(context.externalCacheDir)
+            deleteDirectory(context.cacheDir)
 
             val sharedPref = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
             sharedPref.edit().remove("saved_audio_files").apply()
+        }
+
+        private fun deleteDirectory(directory: File?) {
+            directory?.let {
+                if (it.exists() && it.isDirectory) {
+                    it.listFiles()?.forEach { file ->
+                        if (file.isDirectory) {
+                            deleteDirectory(file)
+                        } else {
+                            file.delete()
+                        }
+                    }
+                }
+            }
         }
     }
 }

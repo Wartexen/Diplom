@@ -25,7 +25,6 @@ import retrofit2.Call
 import retrofit2.Callback
 import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import android.Manifest
@@ -33,6 +32,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -86,7 +86,12 @@ class ProjectDetailsActivity : AppCompatActivity() {
     private var projectStatus = false
 
     private val savedAudioFiles = mutableListOf<String>()
-    companion object { private const val SAVED_AUDIO_FILES_KEY = "saved_audio_files" }
+
+    private companion object {
+        private const val SAVED_AUDIO_FILES_PREFIX = "saved_audio_files_project_"
+        private const val TAG = "ProjectDetailsActivity"
+    }
+
     private val getAudioContent = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             val audioFile = copyUriToFile(it)
@@ -97,11 +102,11 @@ class ProjectDetailsActivity : AppCompatActivity() {
             }
         }
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_project_details)
 
-        // Initialize views
         micButton = findViewById(R.id.micButton)
         uploadAudioButton = findViewById(R.id.uploadAudioButton)
         recordingTimeTextView = findViewById(R.id.recordingTime)
@@ -118,8 +123,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
         userName = findViewById(R.id.userName)
         profileIcon = findViewById(R.id.profileIcon)
 
-        loadSavedAudioFiles()
-
         checkAuthStatus()
 
         val retrofit = Retrofit.Builder()
@@ -135,6 +138,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
 
         val projectId = project.ID
 
+        loadSavedAudioFiles()
         if (projectId != null) {
             getStudentsByProject(projectId)
             getProjectStatus(projectId)
@@ -169,27 +173,42 @@ class ProjectDetailsActivity : AppCompatActivity() {
     }
 
     private fun loadSavedAudioFiles() {
-        val savedFilesSet = sharedPref.getStringSet(SAVED_AUDIO_FILES_KEY, setOf()) ?: setOf()
-        savedAudioFiles.clear()
-        savedAudioFiles.addAll(savedFilesSet.filter { File(it).exists() })
+        try {
+            val projectId = project.ID
+            val savedFilesKey = SAVED_AUDIO_FILES_PREFIX + projectId
+            val savedFilesSet = sharedPref.getStringSet(savedFilesKey, setOf()) ?: setOf()
+            savedAudioFiles.clear()
+            savedAudioFiles.addAll(savedFilesSet.filter { File(it).exists() })
 
-        if (savedAudioFiles.isNotEmpty()) {
-            savedAudioInfoTextView.visibility = View.VISIBLE
-            savedAudioInfoTextView.text = "Сохранено аудиозаписей: ${savedAudioFiles.size}"
-        } else {
+            if (savedAudioFiles.isNotEmpty()) {
+                savedAudioInfoTextView.visibility = View.VISIBLE
+                savedAudioInfoTextView.text = "Сохранено аудиозаписей: ${savedAudioFiles.size}"
+            } else {
+                savedAudioInfoTextView.visibility = View.GONE
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading saved audio files: ${e.message}")
             savedAudioInfoTextView.visibility = View.GONE
         }
     }
 
     private fun saveSavedAudioFilesList() {
-        sharedPref.edit().putStringSet(SAVED_AUDIO_FILES_KEY, savedAudioFiles.toSet()).apply()
+        try {
+            val projectId = project.ID
+            val savedFilesKey = SAVED_AUDIO_FILES_PREFIX + projectId
+            sharedPref.edit().putStringSet(savedFilesKey, savedAudioFiles.toSet()).apply()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error saving audio files list: ${e.message}")
+        }
     }
 
     private fun showAudioFilePickerDialog() {
+        loadSavedAudioFiles()
         if (savedAudioFiles.isEmpty()) {
             getAudioContent.launch("audio/*")
         } else {
-            val options = arrayOf("Выбрать новый файл", "Использовать сохраненный файл")
+            val options = arrayOf("Выбрать новый файл", "Использовать сохраненную запись проекта")
+
             MaterialAlertDialogBuilder(this)
                 .setTitle("Загрузка аудиофайла")
                 .setItems(options) { _, which ->
@@ -202,46 +221,27 @@ class ProjectDetailsActivity : AppCompatActivity() {
         }
     }
 
-    private fun showSavedAudioFilesDialog() {
-        val fileNames = savedAudioFiles.map {
-            val file = File(it)
-            val date = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
-                .format(Date(file.lastModified()))
-
-            val projectTitle = project.Title.ifEmpty { "Без названия" }
-            "'$projectTitle' от $date (${file.length() / 1024} KB)"
-        }.toTypedArray()
-
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Выберите аудиозапись")
-            .setItems(fileNames) { _, which ->
-                val selectedFile = savedAudioFiles[which]
-                uploadAudioFile(selectedFile)
-            }
-            .setNegativeButton("Отмена", null)
-            .show()
-    }
-
     private fun copyUriToFile(uri: Uri): File? {
-
+        try {
             val inputStream: InputStream? = contentResolver.openInputStream(uri)
             if (inputStream != null) {
                 val fileName = "uploaded_audio_${System.currentTimeMillis()}.3gp"
                 val outputFile = File(externalCacheDir, fileName)
 
                 FileOutputStream(outputFile).use { outputStream ->
-                    val buffer = ByteArray(4 * 1024) // 4KB buffer
+                    val buffer = ByteArray(4 * 1024)
                     var read: Int
                     while (inputStream.read(buffer).also { read = it } != -1) {
                         outputStream.write(buffer, 0, read)
                     }
                     outputStream.flush()
                 }
-
                 inputStream.close()
                 return outputFile
             }
-
+        } catch (e: IOException) {
+            Log.e(TAG, "Error copying audio file: ${e.message}")
+        }
         return null
     }
 
@@ -255,22 +255,14 @@ class ProjectDetailsActivity : AppCompatActivity() {
             .setNegativeButton("Отмена", null)
             .show()
     }
-
     private fun showStopRecordingDialog() {
         MaterialAlertDialogBuilder(this)
             .setTitle("Остановить запись")
             .setMessage("Что вы хотите сделать с текущей записью?")
             .setPositiveButton("Сохранить и отправить") { _, _ ->
                 stopRecording()
-                val savedFilePath = saveAudioFileToDevice()
-                if (savedFilePath != null) {
-                    savedAudioFiles.add(savedFilePath)
-                    saveSavedAudioFilesList()
-
-                    savedAudioInfoTextView.visibility = View.VISIBLE
-                    savedAudioInfoTextView.text = "Сохранено аудиозаписей: ${savedAudioFiles.size}"
-                    uploadAudioFile(audioFilePath)
-                }
+                // Сначала пытаемся отправить файл на сервер
+                uploadAudioFile(audioFilePath, true)
             }
             .setNeutralButton("Отменить запись") { _, _ ->
                 cancelRecording()
@@ -278,6 +270,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
             .setNegativeButton("Продолжить запись", null)
             .show()
     }
+
 
     private fun saveAudioFileToDevice(): String? {
         try {
@@ -287,7 +280,8 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 return null
             }
 
-            val audioDir = File(filesDir, "saved_audio")
+            val projectId = project.ID
+            val audioDir = File(filesDir, "saved_audio/project_$projectId")
             if (!audioDir.exists()) {
                 audioDir.mkdirs()
             }
@@ -297,10 +291,12 @@ class ProjectDetailsActivity : AppCompatActivity() {
             val destinationFile = File(audioDir, fileName)
 
             sourceFile.copyTo(destinationFile, overwrite = true)
-            Toast.makeText(this, "Аудиозапись сохранена на устройстве", Toast.LENGTH_SHORT).show()
+
+            Toast.makeText(this, "Аудиозапись сохранена для проекта ${project.Title}", Toast.LENGTH_SHORT).show()
             return destinationFile.absolutePath
 
         } catch (e: IOException) {
+            Log.e(TAG, "Error saving audio file: ${e.message}")
             Toast.makeText(this, "Ошибка при сохранении аудиозаписи", Toast.LENGTH_SHORT).show()
             return null
         }
@@ -326,6 +322,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
 
             Toast.makeText(this, "Запись отменена", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
+            Log.e(TAG, "Error canceling recording: ${e.message}")
             Toast.makeText(this, "Ошибка при отмене записи", Toast.LENGTH_SHORT).show()
         }
     }
@@ -336,22 +333,44 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val projectResponse = response.body()
                     if (projectResponse != null) {
-                        project = projectResponse // Обновляем объект проекта
+                        project = projectResponse
                         projectStatus = projectResponse.Status
-
+                        updateUIBasedOnStatus()
                     }
                 } else {
+                    Log.e(TAG, "Error getting project status: ${response.code()}")
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка при получении статуса проекта", Toast.LENGTH_SHORT).show()
                 }
             }
 
             override fun onFailure(call: Call<Project>, t: Throwable) {
+                Log.e(TAG, "Network error getting project status: ${t.message}")
                 Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при получении статуса проекта", Toast.LENGTH_SHORT).show()
             }
         })
     }
 
+    private fun updateUIBasedOnStatus() {
+        if (project.DefenseStartTime != null) {
+            startDefenseContainer.visibility = View.GONE
+            mainContentContainer.visibility = View.VISIBLE
+            actionMenuButton.visibility = View.VISIBLE
 
+            sendQuestionsRequest(project.ID)
+            Toast.makeText(this, "Защита началась в ${project.DefenseStartTime}", Toast.LENGTH_SHORT).show()
+
+        } else {
+            if (projectStatus) {
+                startDefenseContainer.visibility = View.VISIBLE
+                mainContentContainer.visibility = View.GONE
+                actionMenuButton.visibility = View.GONE
+            } else {
+                startDefenseContainer.visibility = View.VISIBLE
+                mainContentContainer.visibility = View.GONE
+                actionMenuButton.visibility = View.GONE
+            }
+        }
+    }
 
     private fun startDefense() {
         val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
@@ -361,12 +380,13 @@ class ProjectDetailsActivity : AppCompatActivity() {
             .setMessage("Вы уверены, что хотите начать защиту проекта? Время начала: $currentTime")
             .setPositiveButton("Да") { _, _ ->
                 sendDefenseStartTime(currentTime)
-
                 startDefenseContainer.visibility = View.GONE
                 mainContentContainer.visibility = View.VISIBLE
                 actionMenuButton.visibility = View.VISIBLE
 
                 sendQuestionsRequest(project.ID)
+
+                Toast.makeText(this, "Защита началась в $currentTime", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Отмена", null)
             .show()
@@ -377,13 +397,14 @@ class ProjectDetailsActivity : AppCompatActivity() {
         apiService.setProjectTime(projectTimeRequest).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
-                    Log.d("ProjectDetails", " ")
+                    Log.d("ProjectDetails", "Defense start time sent successfully")
+                    project = project.copy(DefenseStartTime = startTime)
                 } else {
-                    Log.e("ProjectDetails", "${response.code()}")
+                    Log.e("ProjectDetails", "Failed to send defense start time: ${response.code()}")
                 }
             }
             override fun onFailure(call: Call<Void>, t: Throwable) {
-                Log.e("ProjectDetails", ": ${t.message}")
+                Log.e("ProjectDetails", "Network error sending defense start time: ${t.message}")
             }
         })
     }
@@ -391,7 +412,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
     private fun showActionMenu(view: View) {
         val popup = PopupMenu(this, view)
         popup.menuInflater.inflate(R.menu.menu_defense, popup.menu)
-
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.action_change_time -> {
@@ -405,7 +425,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 else -> false
             }
         }
-
         popup.show()
     }
 
@@ -419,7 +438,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 actionMenuButton.visibility = View.GONE
 
                 sendDefenseStartTime("null")
-
                 project = project.copy(DefenseStartTime = null)
 
                 Toast.makeText(this, "Защита отменена", Toast.LENGTH_SHORT).show()
@@ -518,11 +536,37 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     Log.e("API Error", errorMessage)
                 }
             }
-
             override fun onFailure(call: Call<List<Student>>, t: Throwable) {
                 Log.e("Network Error", t.message ?: "Неизвестная ошибка")
             }
         })
+    }
+
+    private fun showSavedAudioFilesDialog() {
+        if (savedAudioFiles.isEmpty()) {
+            Toast.makeText(this, "Нет сохраненных аудиозаписей для этого проекта", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val fileNames = savedAudioFiles.map {
+            val file = File(it)
+            val date = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+                .format(Date(file.lastModified()))
+            "Запись от $date (${file.length() / 1024} KB)"
+        }.toTypedArray()
+
+        val titleView = LayoutInflater.from(this).inflate(R.layout.custom_dialog_title, null)
+        val titleTextView = titleView.findViewById<TextView>(R.id.dialog_title)
+        titleTextView.text = "Аудиозаписи проекта:\n${project.Title}"
+
+        MaterialAlertDialogBuilder(this)
+            .setCustomTitle(titleView)
+            .setItems(fileNames) { _, which ->
+                val selectedFile = savedAudioFiles[which]
+                uploadAudioFile(selectedFile)
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
     }
 
     private fun sendQuestionsRequest(projectId: Int) {
@@ -540,7 +584,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     questionsRecyclerView.layoutManager = LinearLayoutManager(this@ProjectDetailsActivity)
                     questionsRecyclerView.adapter = questionAdapter
                 } else {
-                    val errorMessage = response.errorBody()?.string() ?: "Неизвестная ошибка"
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка при получении вопросов", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -610,10 +653,10 @@ class ProjectDetailsActivity : AppCompatActivity() {
             micButton.setImageResource(R.drawable.ic_mic_off)
             Toast.makeText(this, "Запись остановлена", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
+            Log.e(TAG, "Error stopping recording: ${e.message}")
             Toast.makeText(this, "Ошибка при остановке записи", Toast.LENGTH_SHORT).show()
         }
     }
-
     private fun updateRecordingTime() {
         recordingRunnable = Runnable {
             if (isRecording) {
@@ -624,10 +667,9 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 handler.postDelayed(recordingRunnable, 1000)
             }
         }
-        handler.post(recordingRunnable) // Запускаем Runnable
+        handler.post(recordingRunnable)
     }
-
-    private fun uploadAudioFile(filePath: String) {
+    private fun uploadAudioFile(filePath: String, saveOnError: Boolean = false) {
         val file = File(filePath)
         if (!file.exists()) {
             Toast.makeText(this, "Файл не найден", Toast.LENGTH_SHORT).show()
@@ -635,10 +677,8 @@ class ProjectDetailsActivity : AppCompatActivity() {
         }
 
         Toast.makeText(this, "Отправка аудио...", Toast.LENGTH_SHORT).show()
-
         val requestFile = RequestBody.create("audio/3gp".toMediaTypeOrNull(), file)
         val body = MultipartBody.Part.createFormData("audio", file.name, requestFile)
-
 
         val projectId = project.ID
         val projectIdRequestBody = RequestBody.create("text/plain".toMediaTypeOrNull(), projectId.toString())
@@ -647,17 +687,46 @@ class ProjectDetailsActivity : AppCompatActivity() {
             override fun onResponse(call: Call<UploadResponse>, response: Response<UploadResponse>) {
                 if (response.isSuccessful) {
                     Toast.makeText(this@ProjectDetailsActivity, "Аудио успешно отправлено", Toast.LENGTH_SHORT).show()
+                    if (filePath == audioFilePath) {
+                        try {
+                            File(filePath).delete()
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error deleting temp file: ${e.message}")
+                        }
+                    }
                 } else {
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка при отправке аудио", Toast.LENGTH_SHORT).show()
+                    if (saveOnError && filePath == audioFilePath) {
+                        val savedFilePath = saveAudioFileToDevice()
+                        if (savedFilePath != null) {
+                            savedAudioFiles.add(savedFilePath)
+                            saveSavedAudioFilesList()
+
+                            savedAudioInfoTextView.visibility = View.VISIBLE
+                            savedAudioInfoTextView.text = "Сохранено аудиозаписей: ${savedAudioFiles.size}"
+                        }
+                    }
                 }
             }
 
             override fun onFailure(call: Call<UploadResponse>, t: Throwable) {
                 Log.e("Upload Error", t.message ?: "Неизвестная ошибка")
                 Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при отправке аудио", Toast.LENGTH_SHORT).show()
+                if (saveOnError && filePath == audioFilePath) {
+                    val savedFilePath = saveAudioFileToDevice()
+                    if (savedFilePath != null) {
+                        savedAudioFiles.add(savedFilePath)
+                        saveSavedAudioFilesList()
+                        savedAudioInfoTextView.visibility = View.VISIBLE
+                        savedAudioInfoTextView.text = "Сохранено аудиозаписей: ${savedAudioFiles.size}"
+
+                    }
+                }
             }
         })
     }
+
+
 
     private fun updateQuestionOnServer(questionId: Int, newText: String) {
         val updateRequest = QuestionUpdateRequest(newText)
@@ -678,6 +747,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
         })
     }
 
+
     private fun deleteQuestionOnServer(questionId: Int) {
         apiService.deleteQuestion(questionId).enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
@@ -688,9 +758,8 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка удаления", Toast.LENGTH_SHORT).show()
                 }
             }
-
             override fun onFailure(call: Call<Void>, t: Throwable) {
-                Toast.makeText(this@ProjectDetailsActivity, "Сетевая ошибка: ${t.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ProjectDetailsActivity, "Сетевая ошибка", Toast.LENGTH_SHORT).show()
             }
         })
     }
@@ -711,6 +780,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
             }.setNegativeButton("Отмена", null).create()
         dialog.show()
     }
+
     private fun addQuestion(questionRequest: QuestionRequest) {
         apiService.createQuestion(questionRequest).enqueue(object : Callback<Question> {
             override fun onResponse(call: Call<Question>, response: Response<Question>) {
@@ -724,9 +794,8 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка при добавлении вопроса", Toast.LENGTH_SHORT).show()
                 }
             }
-
             override fun onFailure(call: Call<Question>, t: Throwable) {
-                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при добавлении вопроса: ${t.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при добавлении вопроса", Toast.LENGTH_SHORT).show()
             }
         })
     }
@@ -735,7 +804,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
         val calendar = Calendar.getInstance()
         val hour = calendar.get(Calendar.HOUR_OF_DAY)
         val minute = calendar.get(Calendar.MINUTE)
-
         val timePickerDialog = android.app.TimePickerDialog(
             this,
             { _, selectedHour, selectedMinute ->
@@ -746,6 +814,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     .setMessage("Вы уверены, что хотите изменить время начала защиты на $selectedTime?")
                     .setPositiveButton("Да") { _, _ ->
                         sendDefenseStartTime(selectedTime)
+
                         project = project.copy(DefenseStartTime = selectedTime)
 
                         Toast.makeText(this, "Время начала защиты изменено на $selectedTime", Toast.LENGTH_SHORT).show()
@@ -763,6 +832,12 @@ class ProjectDetailsActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        loadSavedAudioFiles()
+        try {
+            if (::project.isInitialized) {
+                loadSavedAudioFiles()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in onResume: ${e.message}")
+        }
     }
 }

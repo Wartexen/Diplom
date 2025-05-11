@@ -1,0 +1,13 @@
+<TextView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dialog_title"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:maxLines="3"
+    android:ellipsize="end"
+    android:textSize="18sp"
+    android:textColor="?android:attr/textColorPrimary"
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp"
+    android:paddingTop="16dp"
+    android:breakStrategy="high_quality"/>

@@ -126,7 +126,10 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="none"
-                            android:padding="12dp"/>
+                            android:padding="12dp"
+                            android:ellipsize="end"
+                            android:maxLines="5"
+                            android:textSize="14sp"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -148,7 +151,10 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="none"
-                            android:padding="12dp"/>
+                            android:padding="12dp"
+                            android:ellipsize="end"
+                            android:maxLines="3"
+                            android:textSize="14sp"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -169,7 +175,10 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="none"
-                            android:padding="12dp"/>
+                            android:padding="12dp"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textSize="14sp"/>
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

@@ -47,11 +47,6 @@ interface ApiService {
     @PATCH("api/projects/project_time/")
     fun setProjectTime(@Body request: ProjectTimeRequest): Call<Void>
 
-    @PATCH("api/projects/{projectId}/")
-    fun updateProjectStatus(
-        @Path("projectId") projectId: Int,
-        @Body request: ProjectStatusUpdateRequest
-    ): Call<ProjectStatusResponse>
 
 
 
