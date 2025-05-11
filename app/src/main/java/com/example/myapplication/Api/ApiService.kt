@@ -1,19 +1,18 @@
 package com.example.myapplication.Api
 import com.example.myapplication.Models.Requests.CommissionScheduleRequest
-import com.example.myapplication.Models.DefenseSchedule
+import com.example.myapplication.Models.Db.DefenseSchedule
 import com.example.myapplication.Models.Requests.GradeRequest
 import com.example.myapplication.Models.Response.GradeResponse
-import com.example.myapplication.Models.Project
-import com.example.myapplication.Models.Response.ProjectStatusResponse
-import com.example.myapplication.Models.Question
+import com.example.myapplication.Models.Db.Project
+import com.example.myapplication.Models.Db.Question
 import com.example.myapplication.Models.Requests.QuestionRequest
 import com.example.myapplication.Models.Auth.SecretaryIdResponse
-import com.example.myapplication.Models.Requests.ProjectStatusUpdateRequest
+import com.example.myapplication.Models.Db.Protocol
 import com.example.myapplication.Models.Requests.ProjectTimeRequest
 import com.example.myapplication.Models.Requests.QuestionUpdateRequest
 import com.example.myapplication.Models.Response.CommissionResponse
 import com.example.myapplication.Models.Response.SecretarySpecializationResponse
-import com.example.myapplication.Models.Student
+import com.example.myapplication.Models.Db.Student
 import com.example.myapplication.Models.Response.UploadResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -85,6 +84,8 @@ interface ApiService {
         @Query("surname") surname: String
     ): Call<SecretaryIdResponse>
 
+    @GET("api/protocols/")
+    fun getProtocolsByStudentId(@Query("ID_Student") studentId: Int): Call<List<Protocol>>
 
 
     @Multipart

@@ -1,6 +1,6 @@
 package com.example.myapplication.Models.Response
 
-import com.example.myapplication.Models.Commission
+import com.example.myapplication.Models.Db.Commission
 
 data class CommissionResponse(
     val ID: Int,

@@ -5,11 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
@@ -19,10 +17,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import com.example.myapplication.Api.ApiService
-import com.example.myapplication.Models.Commission
-import com.example.myapplication.Models.DefenseSchedule
+import com.example.myapplication.Models.Db.Commission
+import com.example.myapplication.Models.Db.DefenseSchedule
 import com.example.myapplication.Models.Requests.CommissionScheduleRequest
-import com.example.myapplication.Models.Specialization
+import com.example.myapplication.Models.Db.Specialization
 import com.example.myapplication.R
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import retrofit2.Call

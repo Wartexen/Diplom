@@ -7,7 +7,7 @@ import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.example.myapplication.Models.Project
+import com.example.myapplication.Models.Db.Project
 import com.example.myapplication.R
 
 class ProjectAdapter(private val projects: List<Project>) :

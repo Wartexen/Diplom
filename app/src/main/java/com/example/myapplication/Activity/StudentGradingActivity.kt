@@ -13,12 +13,12 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.Adapter.StudentGradeAdapter
 import com.example.myapplication.Api.ApiService
-import com.example.myapplication.Models.Project
-import com.example.myapplication.Models.ProjectWithStudents
+import com.example.myapplication.Models.Db.Project
+import com.example.myapplication.Models.Db.ProjectWithStudents
 import com.example.myapplication.Models.Requests.GradeRequest
 import com.example.myapplication.Models.Response.GradeResponse
-import com.example.myapplication.Models.Student
-import com.example.myapplication.Models.StudentGrade
+import com.example.myapplication.Models.Db.Student
+import com.example.myapplication.Models.Db.StudentGrade
 import com.example.myapplication.R
 import retrofit2.Call
 import retrofit2.Callback

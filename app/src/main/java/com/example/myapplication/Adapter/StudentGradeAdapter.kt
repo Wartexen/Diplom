@@ -8,8 +8,8 @@ import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.myapplication.Models.ProjectWithStudents
-import com.example.myapplication.Models.StudentGrade
+import com.example.myapplication.Models.Db.ProjectWithStudents
+import com.example.myapplication.Models.Db.StudentGrade
 import com.example.myapplication.R
 
 class StudentGradeAdapter(private val projects: List<ProjectWithStudents>) :

@@ -89,16 +89,14 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="13dp"
-            >
+            android:orientation="vertical">
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginTop="20dp"
                 android:layout_marginBottom="16dp"
+                android:layout_marginTop="20dp"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="2dp"
                 app:strokeWidth="1dp"
@@ -119,7 +117,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Руководитель:  "
+                            android:text="Информация о проекте: "
                             android:textSize="16sp"
                             android:textStyle="bold"
                             android:textColor="#3A8890" />
@@ -138,15 +136,50 @@
                         android:layout_height="1dp"
                         android:background="#E0E0E0" />
 
-                    <TextView
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Студенты"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="#3A8890"
+                        android:orientation="horizontal"
                         android:background="#F8F8F8"
-                        android:padding="12dp"/>
+                        android:padding="12dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Студенты"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#3A8890" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:gravity="end">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Начало защиты:"
+                                android:textSize="12sp"
+                                android:textColor="#555555" />
+
+                            <TextView
+                                android:id="@+id/defenseStartTimeTextView"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="#3A8890"
+                                android:text="Не начата" />
+                        </LinearLayout>
+                    </LinearLayout>
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/studentsRecyclerView"
@@ -238,7 +271,6 @@
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
 
-                <!-- Запись аудио -->
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -297,12 +329,11 @@
                                 android:id="@+id/uploadAudioButton"
                                 android:layout_width="48dp"
                                 android:layout_height="48dp"
-                                android:src="@drawable/ic_menuupload"
+                                android:src="@android:drawable/ic_menu_upload"
                                 android:background="?attr/selectableItemBackgroundBorderless"
                                 android:padding="8dp"
                                 android:contentDescription="Загрузить аудиофайл" />
                         </LinearLayout>
-
 
                         <TextView
                             android:id="@+id/savedAudioInfo"

@@ -14,7 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.Api.ApiService
-import com.example.myapplication.Models.Project
+import com.example.myapplication.Models.Db.Project
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response

@@ -1,6 +1,4 @@
-package com.example.myapplication.Models
-
-import java.util.Date
+package com.example.myapplication.Models.Db
 
 data class DefenseSchedule(
     val ID: Int,

@@ -1,4 +1,4 @@
-package com.example.myapplication.Models
+package com.example.myapplication.Models.Db
 import android.os.Parcel
 import android.os.Parcelable
 

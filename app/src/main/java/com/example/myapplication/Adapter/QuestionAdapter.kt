@@ -9,7 +9,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.myapplication.Models.Question
+import com.example.myapplication.Models.Db.Question
 import com.example.myapplication.R
 
 class QuestionAdapter(private val questions: MutableList<Question>) :

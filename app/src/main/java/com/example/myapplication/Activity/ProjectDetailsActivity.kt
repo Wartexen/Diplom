@@ -16,15 +16,17 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.Api.ApiService
-import com.example.myapplication.Models.Project
-import com.example.myapplication.Models.Question
-import com.example.myapplication.Models.Student
+import com.example.myapplication.Models.Db.Project
+import com.example.myapplication.Models.Db.Protocol
+import com.example.myapplication.Models.Db.Question
+import com.example.myapplication.Models.Db.Student
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Call
 import retrofit2.Callback
 import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import android.Manifest
@@ -32,7 +34,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
-import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -83,11 +84,16 @@ class ProjectDetailsActivity : AppCompatActivity() {
     private lateinit var mainContentContainer: View
     private lateinit var btnStartDefense: Button
     private lateinit var actionMenuButton: ImageView
+    private lateinit var defenseStartTimeTextView: TextView
+
     private var projectStatus = false
 
     private val savedAudioFiles = mutableListOf<String>()
 
+    private var studentsList = mutableListOf<Student>()
+
     private companion object {
+
         private const val SAVED_AUDIO_FILES_PREFIX = "saved_audio_files_project_"
         private const val TAG = "ProjectDetailsActivity"
     }
@@ -117,6 +123,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
         mainContentContainer = findViewById(R.id.mainContentContainer)
         btnStartDefense = findViewById(R.id.btnStartDefense)
         actionMenuButton = findViewById(R.id.actionMenuButton)
+        defenseStartTimeTextView = findViewById(R.id.defenseStartTimeTextView)
 
         sharedPref = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
         toolbar = findViewById(R.id.toolbar)
@@ -137,8 +144,8 @@ class ProjectDetailsActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.projectLeaderTextView).text = project.Supervisor
 
         val projectId = project.ID
-
         loadSavedAudioFiles()
+
         if (projectId != null) {
             getStudentsByProject(projectId)
             getProjectStatus(projectId)
@@ -162,11 +169,9 @@ class ProjectDetailsActivity : AppCompatActivity() {
         fabAddQuestion.setOnClickListener {
             showAddQuestionDialog()
         }
-
         btnStartDefense.setOnClickListener {
             startDefense()
         }
-
         actionMenuButton.setOnClickListener {
             showActionMenu(it)
         }
@@ -187,11 +192,9 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 savedAudioInfoTextView.visibility = View.GONE
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error loading saved audio files: ${e.message}")
             savedAudioInfoTextView.visibility = View.GONE
         }
     }
-
     private fun saveSavedAudioFilesList() {
         try {
             val projectId = project.ID
@@ -204,6 +207,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
 
     private fun showAudioFilePickerDialog() {
         loadSavedAudioFiles()
+
         if (savedAudioFiles.isEmpty()) {
             getAudioContent.launch("audio/*")
         } else {
@@ -229,13 +233,14 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 val outputFile = File(externalCacheDir, fileName)
 
                 FileOutputStream(outputFile).use { outputStream ->
-                    val buffer = ByteArray(4 * 1024)
+                    val buffer = ByteArray(4 * 1024) // 4KB buffer
                     var read: Int
                     while (inputStream.read(buffer).also { read = it } != -1) {
                         outputStream.write(buffer, 0, read)
                     }
                     outputStream.flush()
                 }
+
                 inputStream.close()
                 return outputFile
             }
@@ -255,13 +260,13 @@ class ProjectDetailsActivity : AppCompatActivity() {
             .setNegativeButton("Отмена", null)
             .show()
     }
+
     private fun showStopRecordingDialog() {
         MaterialAlertDialogBuilder(this)
             .setTitle("Остановить запись")
             .setMessage("Что вы хотите сделать с текущей записью?")
             .setPositiveButton("Сохранить и отправить") { _, _ ->
                 stopRecording()
-                // Сначала пытаемся отправить файл на сервер
                 uploadAudioFile(audioFilePath, true)
             }
             .setNeutralButton("Отменить запись") { _, _ ->
@@ -270,7 +275,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
             .setNegativeButton("Продолжить запись", null)
             .show()
     }
-
 
     private fun saveAudioFileToDevice(): String? {
         try {
@@ -286,6 +290,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 audioDir.mkdirs()
             }
 
+
             val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val fileName = "audio_${project.ID}_$timestamp.3gp"
             val destinationFile = File(audioDir, fileName)
@@ -296,7 +301,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
             return destinationFile.absolutePath
 
         } catch (e: IOException) {
-            Log.e(TAG, "Error saving audio file: ${e.message}")
             Toast.makeText(this, "Ошибка при сохранении аудиозаписи", Toast.LENGTH_SHORT).show()
             return null
         }
@@ -310,6 +314,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
             }
             mediaRecorder = null
 
+            // Удаляем файл записи
             val file = File(audioFilePath)
             if (file.exists()) {
                 file.delete()
@@ -322,7 +327,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
 
             Toast.makeText(this, "Запись отменена", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            Log.e(TAG, "Error canceling recording: ${e.message}")
             Toast.makeText(this, "Ошибка при отмене записи", Toast.LENGTH_SHORT).show()
         }
     }
@@ -335,10 +339,8 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     if (projectResponse != null) {
                         project = projectResponse
                         projectStatus = projectResponse.Status
-                        updateUIBasedOnStatus()
                     }
                 } else {
-                    Log.e(TAG, "Error getting project status: ${response.code()}")
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка при получении статуса проекта", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -350,68 +352,125 @@ class ProjectDetailsActivity : AppCompatActivity() {
         })
     }
 
-    private fun updateUIBasedOnStatus() {
-        if (project.DefenseStartTime != null) {
-            startDefenseContainer.visibility = View.GONE
-            mainContentContainer.visibility = View.VISIBLE
-            actionMenuButton.visibility = View.VISIBLE
+    private fun getStudentsByProject(projectId: Int) {
+        apiService.getStudentsByProject(projectId).enqueue(object : Callback<List<Student>> {
+            override fun onResponse(call: Call<List<Student>>, response: Response<List<Student>>) {
+                if (response.isSuccessful) {
+                    val students = response.body() ?: emptyList()
+                    studentsList.clear()
+                    studentsList.addAll(students)
 
-            sendQuestionsRequest(project.ID)
-            Toast.makeText(this, "Защита началась в ${project.DefenseStartTime}", Toast.LENGTH_SHORT).show()
+                    studentsRecyclerView.layoutManager = LinearLayoutManager(this@ProjectDetailsActivity)
+                    studentsRecyclerView.adapter = StudentAdapter(students)
 
-        } else {
-            if (projectStatus) {
-                startDefenseContainer.visibility = View.VISIBLE
-                mainContentContainer.visibility = View.GONE
-                actionMenuButton.visibility = View.GONE
-            } else {
-                startDefenseContainer.visibility = View.VISIBLE
-                mainContentContainer.visibility = View.GONE
-                actionMenuButton.visibility = View.GONE
+                    if (students.isNotEmpty()) {
+                        val firstStudentId = students[0].ID
+                        checkDefenseStartTime(firstStudentId)
+                    } else {
+                        startDefenseContainer.visibility = View.VISIBLE
+                        mainContentContainer.visibility = View.GONE
+                        actionMenuButton.visibility = View.GONE
+                    }
+                } else {
+                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при получении списка студентов", Toast.LENGTH_SHORT).show()
+                }
             }
-        }
+
+            override fun onFailure(call: Call<List<Student>>, t: Throwable) {
+                Log.e("Network Error", t.message ?: "Неизвестная ошибка")
+                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при получении списка студентов", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun checkDefenseStartTime(studentId: Int) {
+        apiService.getProtocolsByStudentId(studentId).enqueue(object : Callback<List<Protocol>> {
+            override fun onResponse(call: Call<List<Protocol>>, response: Response<List<Protocol>>) {
+                if (response.isSuccessful) {
+                    val protocols = response.body() ?: emptyList()
+
+                    if (protocols.isNotEmpty()) {
+                        val protocol = protocols[0]
+                        val defenseStartTime = protocol.DefenseStartTime
+                        if (defenseStartTime.isNullOrEmpty()) {
+                            startDefenseContainer.visibility = View.VISIBLE
+                            mainContentContainer.visibility = View.GONE
+                            actionMenuButton.visibility = View.GONE
+                            defenseStartTimeTextView.text = "Не начата"
+                        } else {
+                            startDefenseContainer.visibility = View.GONE
+                            mainContentContainer.visibility = View.VISIBLE
+                            actionMenuButton.visibility = View.VISIBLE
+
+                            defenseStartTimeTextView.text = defenseStartTime
+
+                            sendQuestionsRequest(project.ID)
+
+                            Toast.makeText(this@ProjectDetailsActivity, "Защита началась в $defenseStartTime", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        startDefenseContainer.visibility = View.VISIBLE
+                        mainContentContainer.visibility = View.GONE
+                        actionMenuButton.visibility = View.GONE
+                        defenseStartTimeTextView.text = "Не начата"
+                    }
+                } else {
+                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при получении протоколов", Toast.LENGTH_SHORT).show()
+
+                    startDefenseContainer.visibility = View.VISIBLE
+                    mainContentContainer.visibility = View.GONE
+                    actionMenuButton.visibility = View.GONE
+                    defenseStartTimeTextView.text = "Ошибка"
+                }
+            }
+
+            override fun onFailure(call: Call<List<Protocol>>, t: Throwable) {
+                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при получении протоколов", Toast.LENGTH_SHORT).show()
+
+                startDefenseContainer.visibility = View.VISIBLE
+                mainContentContainer.visibility = View.GONE
+                actionMenuButton.visibility = View.GONE
+                defenseStartTimeTextView.text = "Ошибка сети"
+            }
+        })
     }
 
     private fun startDefense() {
         val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-
         MaterialAlertDialogBuilder(this)
             .setTitle("Начать защиту")
             .setMessage("Вы уверены, что хотите начать защиту проекта? Время начала: $currentTime")
             .setPositiveButton("Да") { _, _ ->
-                sendDefenseStartTime(currentTime)
-                startDefenseContainer.visibility = View.GONE
-                mainContentContainer.visibility = View.VISIBLE
-                actionMenuButton.visibility = View.VISIBLE
+                val projectTimeRequest = ProjectTimeRequest(project.ID, currentTime)
 
-                sendQuestionsRequest(project.ID)
+                apiService.setProjectTime(projectTimeRequest).enqueue(object : Callback<Void> {
+                    override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                        if (response.isSuccessful) {
 
-                Toast.makeText(this, "Защита началась в $currentTime", Toast.LENGTH_SHORT).show()
+                            startDefenseContainer.visibility = View.GONE
+                            mainContentContainer.visibility = View.VISIBLE
+                            actionMenuButton.visibility = View.VISIBLE
+                            defenseStartTimeTextView.text = currentTime
+
+                            sendQuestionsRequest(project.ID)
+                            Toast.makeText(this@ProjectDetailsActivity, "Защита началась в $currentTime", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(this@ProjectDetailsActivity, "Ошибка при установке времени начала защиты", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    override fun onFailure(call: Call<Void>, t: Throwable) {
+                        Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при установке времени начала защиты", Toast.LENGTH_SHORT).show()
+                    }
+                })
             }
             .setNegativeButton("Отмена", null)
             .show()
     }
 
-    private fun sendDefenseStartTime(startTime: String) {
-        val projectTimeRequest = ProjectTimeRequest(project.ID, startTime)
-        apiService.setProjectTime(projectTimeRequest).enqueue(object : Callback<Void> {
-            override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                if (response.isSuccessful) {
-                    Log.d("ProjectDetails", "Defense start time sent successfully")
-                    project = project.copy(DefenseStartTime = startTime)
-                } else {
-                    Log.e("ProjectDetails", "Failed to send defense start time: ${response.code()}")
-                }
-            }
-            override fun onFailure(call: Call<Void>, t: Throwable) {
-                Log.e("ProjectDetails", "Network error sending defense start time: ${t.message}")
-            }
-        })
-    }
-
     private fun showActionMenu(view: View) {
         val popup = PopupMenu(this, view)
         popup.menuInflater.inflate(R.menu.menu_defense, popup.menu)
+
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.action_change_time -> {
@@ -425,6 +484,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 else -> false
             }
         }
+
         popup.show()
     }
 
@@ -433,14 +493,27 @@ class ProjectDetailsActivity : AppCompatActivity() {
             .setTitle("Отменить защиту")
             .setMessage("Вы уверены, что хотите отменить защиту проекта?")
             .setPositiveButton("Да") { _, _ ->
-                mainContentContainer.visibility = View.GONE
-                startDefenseContainer.visibility = View.VISIBLE
-                actionMenuButton.visibility = View.GONE
+                val projectTimeRequest = ProjectTimeRequest(project.ID, "null")
 
-                sendDefenseStartTime("null")
-                project = project.copy(DefenseStartTime = null)
+                apiService.setProjectTime(projectTimeRequest).enqueue(object : Callback<Void> {
+                    override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                        if (response.isSuccessful) {
 
-                Toast.makeText(this, "Защита отменена", Toast.LENGTH_SHORT).show()
+                            mainContentContainer.visibility = View.GONE
+                            startDefenseContainer.visibility = View.VISIBLE
+                            actionMenuButton.visibility = View.GONE
+                            defenseStartTimeTextView.text = "Не начата"
+
+                            Toast.makeText(this@ProjectDetailsActivity, "Защита отменена", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(this@ProjectDetailsActivity, "Ошибка при отмене защиты", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                    override fun onFailure(call: Call<Void>, t: Throwable) {
+                        Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при отмене защиты", Toast.LENGTH_SHORT).show()
+                    }
+                })
             }
             .setNegativeButton("Нет", null)
             .show()
@@ -460,7 +533,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
             }
         }
     }
-
     private fun formatUserName(fullName: String): String {
         return try {
             val parts = fullName.split(" ")
@@ -473,12 +545,10 @@ class ProjectDetailsActivity : AppCompatActivity() {
             fullName
         }
     }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
         return true
     }
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_profile -> {
@@ -488,7 +558,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
-
     private fun showProfilePopup(anchor: View) {
         val popup = PopupMenu(this, anchor)
         popup.menuInflater.inflate(R.menu.profile_menu, popup.menu)
@@ -504,7 +573,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
         }
         popup.show()
     }
-
     private fun showLogoutConfirmation() {
         MaterialAlertDialogBuilder(this)
             .setTitle("Выход из аккаунта")
@@ -515,31 +583,12 @@ class ProjectDetailsActivity : AppCompatActivity() {
             .setNegativeButton("Отмена", null)
             .show()
     }
-
     private fun logout() {
         sharedPref.edit().clear().apply()
         val intent = Intent(this, BitrixAuthActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
-    }
-
-    private fun getStudentsByProject(projectId: Int) {
-        apiService.getStudentsByProject(projectId).enqueue(object : Callback<List<Student>> {
-            override fun onResponse(call: Call<List<Student>>, response: Response<List<Student>>) {
-                if (response.isSuccessful) {
-                    val students = response.body() ?: emptyList()
-                    studentsRecyclerView.layoutManager = LinearLayoutManager(this@ProjectDetailsActivity)
-                    studentsRecyclerView.adapter = StudentAdapter(students)
-                } else {
-                    val errorMessage = response.errorBody()?.string() ?: "Неизвестная ошибка"
-                    Log.e("API Error", errorMessage)
-                }
-            }
-            override fun onFailure(call: Call<List<Student>>, t: Throwable) {
-                Log.e("Network Error", t.message ?: "Неизвестная ошибка")
-            }
-        })
     }
 
     private fun showSavedAudioFilesDialog() {
@@ -555,12 +604,8 @@ class ProjectDetailsActivity : AppCompatActivity() {
             "Запись от $date (${file.length() / 1024} KB)"
         }.toTypedArray()
 
-        val titleView = LayoutInflater.from(this).inflate(R.layout.custom_dialog_title, null)
-        val titleTextView = titleView.findViewById<TextView>(R.id.dialog_title)
-        titleTextView.text = "Аудиозаписи проекта:\n${project.Title}"
-
         MaterialAlertDialogBuilder(this)
-            .setCustomTitle(titleView)
+            .setTitle("Аудиозаписи проекта \"${project.Title}\"")
             .setItems(fileNames) { _, which ->
                 val selectedFile = savedAudioFiles[which]
                 uploadAudioFile(selectedFile)
@@ -588,7 +633,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 }
             }
             override fun onFailure(call: Call<List<Question>>, t: Throwable) {
-                Log.e("Network Error", t.message ?: "Неизвестная ошибка")
                 Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети", Toast.LENGTH_SHORT).show()
             }
         })
@@ -615,7 +659,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
             micButton.setImageResource(R.drawable.ic_mic_on)
             Toast.makeText(this, "Запись началась", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            Log.e("Recording", "Ошибка записи: ${e.message}")
             Toast.makeText(this, "Ошибка записи", Toast.LENGTH_SHORT).show()
             releaseMediaRecorder()
         }
@@ -653,10 +696,10 @@ class ProjectDetailsActivity : AppCompatActivity() {
             micButton.setImageResource(R.drawable.ic_mic_off)
             Toast.makeText(this, "Запись остановлена", Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            Log.e(TAG, "Error stopping recording: ${e.message}")
             Toast.makeText(this, "Ошибка при остановке записи", Toast.LENGTH_SHORT).show()
         }
     }
+
     private fun updateRecordingTime() {
         recordingRunnable = Runnable {
             if (isRecording) {
@@ -669,6 +712,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
         }
         handler.post(recordingRunnable)
     }
+
     private fun uploadAudioFile(filePath: String, saveOnError: Boolean = false) {
         val file = File(filePath)
         if (!file.exists()) {
@@ -676,7 +720,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
             return
         }
 
-        Toast.makeText(this, "Отправка аудио...", Toast.LENGTH_SHORT).show()
         val requestFile = RequestBody.create("audio/3gp".toMediaTypeOrNull(), file)
         val body = MultipartBody.Part.createFormData("audio", file.name, requestFile)
 
@@ -701,9 +744,12 @@ class ProjectDetailsActivity : AppCompatActivity() {
                         if (savedFilePath != null) {
                             savedAudioFiles.add(savedFilePath)
                             saveSavedAudioFilesList()
-
                             savedAudioInfoTextView.visibility = View.VISIBLE
                             savedAudioInfoTextView.text = "Сохранено аудиозаписей: ${savedAudioFiles.size}"
+
+                            Toast.makeText(this@ProjectDetailsActivity,
+                                "Аудио сохранено локально из-за ошибки отправки",
+                                Toast.LENGTH_SHORT).show()
                         }
                     }
                 }
@@ -717,15 +763,18 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     if (savedFilePath != null) {
                         savedAudioFiles.add(savedFilePath)
                         saveSavedAudioFilesList()
+
                         savedAudioInfoTextView.visibility = View.VISIBLE
                         savedAudioInfoTextView.text = "Сохранено аудиозаписей: ${savedAudioFiles.size}"
 
+                        Toast.makeText(this@ProjectDetailsActivity,
+                            "Аудио сохранено локально из-за ошибки сети",
+                            Toast.LENGTH_SHORT).show()
                     }
                 }
             }
         })
     }
-
 
 
     private fun updateQuestionOnServer(questionId: Int, newText: String) {
@@ -746,7 +795,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
             }
         })
     }
-
 
     private fun deleteQuestionOnServer(questionId: Int) {
         apiService.deleteQuestion(questionId).enqueue(object : Callback<Void> {
@@ -813,11 +861,21 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     .setTitle("Изменить время начала")
                     .setMessage("Вы уверены, что хотите изменить время начала защиты на $selectedTime?")
                     .setPositiveButton("Да") { _, _ ->
-                        sendDefenseStartTime(selectedTime)
+                        val projectTimeRequest = ProjectTimeRequest(project.ID, selectedTime)
 
-                        project = project.copy(DefenseStartTime = selectedTime)
-
-                        Toast.makeText(this, "Время начала защиты изменено на $selectedTime", Toast.LENGTH_SHORT).show()
+                        apiService.setProjectTime(projectTimeRequest).enqueue(object : Callback<Void> {
+                            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                                if (response.isSuccessful) {
+                                    defenseStartTimeTextView.text = selectedTime
+                                    Toast.makeText(this@ProjectDetailsActivity, "Время начала защиты изменено на $selectedTime", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при изменении времени начала защиты", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                            override fun onFailure(call: Call<Void>, t: Throwable) {
+                                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при изменении времени начала защиты", Toast.LENGTH_SHORT).show()
+                            }
+                        })
                     }
                     .setNegativeButton("Отмена", null)
                     .show()
@@ -832,6 +890,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Обновляем список сохраненных аудиофайлов
         try {
             if (::project.isInitialized) {
                 loadSavedAudioFiles()
