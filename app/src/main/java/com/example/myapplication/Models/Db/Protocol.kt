@@ -5,6 +5,7 @@ data class Protocol(
     val Year: Int,
     val Grade: String?,
     val DefenseStartTime: String?,
+    val DefenseEndTime: String?,
     val Number: String?,
     val ID_Question: Int,
     val ID_Student: Int,

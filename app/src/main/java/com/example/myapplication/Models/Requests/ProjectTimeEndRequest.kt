@@ -1,6 +1,6 @@
 package com.example.myapplication.Models.Requests
 
-data class ProjectTimeRequest(
+data class ProjectTimeEndRequest(
     val ID_Project: Int,
-    val DefenseStartTime: String?
+    val DefenseEndTime: String? = null
 )

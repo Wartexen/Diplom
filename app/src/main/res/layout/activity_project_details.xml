@@ -96,7 +96,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginBottom="16dp"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="25dp"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="2dp"
                 app:strokeWidth="1dp"
@@ -329,7 +329,7 @@
                                 android:id="@+id/uploadAudioButton"
                                 android:layout_width="48dp"
                                 android:layout_height="48dp"
-                                android:src="@android:drawable/ic_menu_upload"
+                                android:src="@drawable/ic_menuupload"
                                 android:background="?attr/selectableItemBackgroundBorderless"
                                 android:padding="8dp"
                                 android:contentDescription="Загрузить аудиофайл" />

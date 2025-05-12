@@ -13,6 +13,7 @@ import com.example.myapplication.Models.Requests.QuestionUpdateRequest
 import com.example.myapplication.Models.Response.CommissionResponse
 import com.example.myapplication.Models.Response.SecretarySpecializationResponse
 import com.example.myapplication.Models.Db.Student
+import com.example.myapplication.Models.Requests.ProjectTimeEndRequest
 import com.example.myapplication.Models.Response.UploadResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -43,8 +44,11 @@ interface ApiService {
     @PATCH("api/students/update_grade/")
     fun gradeStudent(@Body gradeRequest: GradeRequest): Call<GradeResponse>
 
-    @PATCH("api/projects/project_time/")
-    fun setProjectTime(@Body request: ProjectTimeRequest): Call<Void>
+    @PATCH("api/projects/project_time_start/")
+    fun setProjectStartTime(@Body request: ProjectTimeRequest): Call<Void>
+
+    @PATCH("api/projects/project_time_end/")
+    fun setProjectEndTime(@Body request: ProjectTimeEndRequest): Call<Void>
 
 
 

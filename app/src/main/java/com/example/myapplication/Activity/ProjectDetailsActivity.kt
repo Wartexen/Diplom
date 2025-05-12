@@ -45,6 +45,7 @@ import com.example.myapplication.R
 import com.example.myapplication.Adapter.StudentAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.EditText
+import com.example.myapplication.Models.Requests.ProjectTimeEndRequest
 import com.example.myapplication.Models.Requests.QuestionRequest
 import com.example.myapplication.Models.Requests.ProjectTimeRequest
 import com.example.myapplication.Models.Requests.QuestionUpdateRequest
@@ -233,7 +234,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 val outputFile = File(externalCacheDir, fileName)
 
                 FileOutputStream(outputFile).use { outputStream ->
-                    val buffer = ByteArray(4 * 1024) // 4KB buffer
+                    val buffer = ByteArray(4 * 1024)
                     var read: Int
                     while (inputStream.read(buffer).also { read = it } != -1) {
                         outputStream.write(buffer, 0, read)
@@ -268,6 +269,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
             .setPositiveButton("Сохранить и отправить") { _, _ ->
                 stopRecording()
                 uploadAudioFile(audioFilePath, true)
+                setDefenseEndTime()
             }
             .setNeutralButton("Отменить запись") { _, _ ->
                 cancelRecording()
@@ -296,8 +298,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
             val destinationFile = File(audioDir, fileName)
 
             sourceFile.copyTo(destinationFile, overwrite = true)
-
-            Toast.makeText(this, "Аудиозапись сохранена для проекта ${project.Title}", Toast.LENGTH_SHORT).show()
             return destinationFile.absolutePath
 
         } catch (e: IOException) {
@@ -313,8 +313,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 release()
             }
             mediaRecorder = null
-
-            // Удаляем файл записи
             val file = File(audioFilePath)
             if (file.exists()) {
                 file.delete()
@@ -405,8 +403,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
                             defenseStartTimeTextView.text = defenseStartTime
 
                             sendQuestionsRequest(project.ID)
-
-                            Toast.makeText(this@ProjectDetailsActivity, "Защита началась в $defenseStartTime", Toast.LENGTH_SHORT).show()
                         }
                     } else {
                         startDefenseContainer.visibility = View.VISIBLE
@@ -415,7 +411,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
                         defenseStartTimeTextView.text = "Не начата"
                     }
                 } else {
-                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при получении протоколов", Toast.LENGTH_SHORT).show()
 
                     startDefenseContainer.visibility = View.VISIBLE
                     mainContentContainer.visibility = View.GONE
@@ -423,10 +418,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     defenseStartTimeTextView.text = "Ошибка"
                 }
             }
-
             override fun onFailure(call: Call<List<Protocol>>, t: Throwable) {
-                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при получении протоколов", Toast.LENGTH_SHORT).show()
-
                 startDefenseContainer.visibility = View.VISIBLE
                 mainContentContainer.visibility = View.GONE
                 actionMenuButton.visibility = View.GONE
@@ -441,12 +433,10 @@ class ProjectDetailsActivity : AppCompatActivity() {
             .setTitle("Начать защиту")
             .setMessage("Вы уверены, что хотите начать защиту проекта? Время начала: $currentTime")
             .setPositiveButton("Да") { _, _ ->
-                val projectTimeRequest = ProjectTimeRequest(project.ID, currentTime)
-
-                apiService.setProjectTime(projectTimeRequest).enqueue(object : Callback<Void> {
+                val projectTimeRequest = ProjectTimeRequest(ID_Project = project.ID, DefenseStartTime = currentTime)
+                apiService.setProjectStartTime(projectTimeRequest).enqueue(object : Callback<Void> {
                     override fun onResponse(call: Call<Void>, response: Response<Void>) {
                         if (response.isSuccessful) {
-
                             startDefenseContainer.visibility = View.GONE
                             mainContentContainer.visibility = View.VISIBLE
                             actionMenuButton.visibility = View.VISIBLE
@@ -455,16 +445,50 @@ class ProjectDetailsActivity : AppCompatActivity() {
                             sendQuestionsRequest(project.ID)
                             Toast.makeText(this@ProjectDetailsActivity, "Защита началась в $currentTime", Toast.LENGTH_SHORT).show()
                         } else {
-                            Toast.makeText(this@ProjectDetailsActivity, "Ошибка при установке времени начала защиты", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(this@ProjectDetailsActivity,
+                                "Ошибка при установке времени начала защиты: ${response.code()}",
+                                Toast.LENGTH_SHORT).show()
                         }
                     }
                     override fun onFailure(call: Call<Void>, t: Throwable) {
-                        Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при установке времени начала защиты", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@ProjectDetailsActivity,
+                            "Ошибка сети при установке времени начала защиты: ${t.message}",
+                            Toast.LENGTH_SHORT).show()
                     }
                 })
             }
             .setNegativeButton("Отмена", null)
             .show()
+    }
+
+    private fun setDefenseEndTime() {
+        val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+        val projectTimeEndRequest = ProjectTimeEndRequest(ID_Project = project.ID, DefenseEndTime = currentTime)
+        apiService.setProjectEndTime(projectTimeEndRequest).enqueue(object : Callback<Void> {
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                if (response.isSuccessful) {
+                    Toast.makeText(
+                        this@ProjectDetailsActivity,
+                        "Защита завершена в $currentTime",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                } else {
+                    Toast.makeText(
+                        this@ProjectDetailsActivity,
+                        "Ошибка при установке времени окончания защиты: ${response.code()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Toast.makeText(
+                    this@ProjectDetailsActivity,
+                    "Ошибка сети при установке времени окончания защиты: ${t.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        })
     }
 
     private fun showActionMenu(view: View) {
@@ -493,9 +517,8 @@ class ProjectDetailsActivity : AppCompatActivity() {
             .setTitle("Отменить защиту")
             .setMessage("Вы уверены, что хотите отменить защиту проекта?")
             .setPositiveButton("Да") { _, _ ->
-                val projectTimeRequest = ProjectTimeRequest(project.ID, "null")
-
-                apiService.setProjectTime(projectTimeRequest).enqueue(object : Callback<Void> {
+                val projectTimeRequest = ProjectTimeRequest(ID_Project = project.ID, DefenseStartTime = null)
+                apiService.setProjectStartTime(projectTimeRequest).enqueue(object : Callback<Void> {
                     override fun onResponse(call: Call<Void>, response: Response<Void>) {
                         if (response.isSuccessful) {
 
@@ -852,6 +875,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
         val calendar = Calendar.getInstance()
         val hour = calendar.get(Calendar.HOUR_OF_DAY)
         val minute = calendar.get(Calendar.MINUTE)
+
         val timePickerDialog = android.app.TimePickerDialog(
             this,
             { _, selectedHour, selectedMinute ->
@@ -861,19 +885,25 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     .setTitle("Изменить время начала")
                     .setMessage("Вы уверены, что хотите изменить время начала защиты на $selectedTime?")
                     .setPositiveButton("Да") { _, _ ->
-                        val projectTimeRequest = ProjectTimeRequest(project.ID, selectedTime)
-
-                        apiService.setProjectTime(projectTimeRequest).enqueue(object : Callback<Void> {
+                        val projectTimeRequest = ProjectTimeRequest(ID_Project = project.ID, DefenseStartTime = selectedTime)
+                        apiService.setProjectStartTime(projectTimeRequest).enqueue(object : Callback<Void> {
                             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                                 if (response.isSuccessful) {
                                     defenseStartTimeTextView.text = selectedTime
-                                    Toast.makeText(this@ProjectDetailsActivity, "Время начала защиты изменено на $selectedTime", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(this@ProjectDetailsActivity,
+                                        "Время начала защиты изменено на $selectedTime",
+                                        Toast.LENGTH_SHORT).show()
                                 } else {
-                                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при изменении времени начала защиты", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(this@ProjectDetailsActivity,
+                                        "Ошибка при изменении времени начала защиты: ${response.code()}",
+                                        Toast.LENGTH_SHORT).show()
                                 }
                             }
+
                             override fun onFailure(call: Call<Void>, t: Throwable) {
-                                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при изменении времени начала защиты", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this@ProjectDetailsActivity,
+                                    "Ошибка сети при изменении времени начала защиты: ${t.message}",
+                                    Toast.LENGTH_SHORT).show()
                             }
                         })
                     }
@@ -890,7 +920,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Обновляем список сохраненных аудиофайлов
         try {
             if (::project.isInitialized) {
                 loadSavedAudioFiles()
