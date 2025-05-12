@@ -5,15 +5,20 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import com.example.myapplication.Api.ApiService
@@ -47,6 +52,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var userName: TextView
     private lateinit var profileIcon: ImageView
 
+    private var dppValues: List<String> = emptyList()
+    private var commissionValues: List<String> = emptyList()
+    private var scheduleValues: List<String> = emptyList()
 
     @SuppressLint("MissingInflatedId")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,7 +70,9 @@ class MainActivity : AppCompatActivity() {
         spinnerDpp = findViewById(R.id.spinnerDpp)
         spinnerCommission = findViewById(R.id.spinnerCommission)
         spinnerDefenseSchedule = findViewById(R.id.spinnerDate)
-        setupSpinners()
+
+        spinnerCommission.isEnabled = false
+        spinnerDefenseSchedule.isEnabled = false
 
         val retrofit = Retrofit.Builder()
             .baseUrl("http://10.0.2.2:8000/")
@@ -80,23 +90,46 @@ class MainActivity : AppCompatActivity() {
             fetchSpecializations(apiService, secretaryId)
         }
         var selectedSpecializationID = 0
-        spinnerDpp.setOnItemClickListener { parent, _, position, _ ->
-            if (position > 0) {
-                val selectedSpecialization = specializationsList[position - 1]
+        spinnerDpp.setOnClickListener {
+            if (dppValues.isEmpty()) {
+                showToast("Список направлений пуст")
+                return@setOnClickListener
+            }
+
+            showSelectionDialog("Выберите направление", dppValues) { position ->
+                spinnerDpp.setText(dppValues[position])
+                val selectedSpecialization = specializationsList[position]
                 selectedSpecializationID = selectedSpecialization.ID
+                spinnerCommission.isEnabled = true
+                spinnerCommission.setText("")
+                spinnerDefenseSchedule.isEnabled = false
+                spinnerDefenseSchedule.setText("")
+
                 fetchCommissions(apiService, secretaryId, selectedSpecialization.ID)
-            } else {
-                updateSpinnerCommission(emptyList())
-                updateSpinnerDefenseSchedule(emptyList())
             }
         }
 
-        spinnerCommission.setOnItemClickListener { parent, _, position, _ ->
-            if (position > 0) {
-                val selectedCommission = commissionsList[position - 1]
+        spinnerCommission.setOnClickListener {
+            if (commissionValues.isEmpty()) {
+                showToast("Сначала выберите направление")
+                return@setOnClickListener
+            }
+            showSelectionDialog("Выберите комиссию", commissionValues) { position ->
+                spinnerCommission.setText(commissionValues[position])
+                spinnerDefenseSchedule.isEnabled = true
+                spinnerDefenseSchedule.setText("")
                 fetchDefenseSchedule(apiService, selectedSpecializationID)
-            } else {
-                updateSpinnerDefenseSchedule(emptyList())
+            }
+        }
+
+        spinnerDefenseSchedule.setOnClickListener {
+            if (scheduleValues.isEmpty()) {
+                showToast("Сначала выберите комиссию")
+                return@setOnClickListener
+            }
+
+            showSelectionDialog("Выберите дату защиты", scheduleValues) { position ->
+                spinnerDefenseSchedule.setText(scheduleValues[position])
             }
         }
 
@@ -105,33 +138,68 @@ class MainActivity : AppCompatActivity() {
                 val selectedDpp = spinnerDpp.text.toString()
                 val selectedCommissionName = spinnerCommission.text.toString()
                 val selectedScheduleName = spinnerDefenseSchedule.text.toString()
-                if (selectedCommissionName != null && selectedScheduleName != null &&
-                    selectedCommissionName != "Выберите комиссию" &&
-                    selectedScheduleName != "Выберите дату защиты") {
 
-                    val commissionId = commissionsList.find { it.Name == selectedCommissionName }?.ID
-                    selectedScheduleId = defenseSchedulesList.find { formatDate(it.DateTime) == selectedScheduleName }?.ID
-                    if (commissionId != null && selectedScheduleId != null) {
-                        sendCommissionId(apiService, commissionId, selectedScheduleId!!)
-
-                        // Создаем Intent с полным путем к классу
-                        val intent = Intent(this, com.example.myapplication.ProjectListActivity::class.java).apply {
-                            putExtra("selectedDpp", selectedDpp)
-                            putExtra("selectedCommission", selectedCommissionName)
-                            putExtra("selectedDate", selectedScheduleName)
-                            putExtra("selectedScheduleId", selectedScheduleId)
-                        }
-                        startActivity(intent)
-                    } else {
-                        showToast("Пожалуйста, выберите аттестационную комиссию и расписание")
-                    }
-                } else {
+                if (selectedDpp.isEmpty() || selectedCommissionName.isEmpty() || selectedScheduleName.isEmpty()) {
                     showToast("Пожалуйста, выберите все необходимые параметры")
+                    return@setOnClickListener
+                }
+
+                val commissionId = commissionsList.find { it.Name == selectedCommissionName }?.ID
+                selectedScheduleId = defenseSchedulesList.find { formatDate(it.DateTime) == selectedScheduleName }?.ID
+
+                if (commissionId != null && selectedScheduleId != null) {
+                    sendCommissionId(apiService, commissionId, selectedScheduleId!!)
+
+                    val intent = Intent(this, com.example.myapplication.ProjectListActivity::class.java).apply {
+                        putExtra("selectedDpp", selectedDpp)
+                        putExtra("selectedCommission", selectedCommissionName)
+                        putExtra("selectedDate", selectedScheduleName)
+                        putExtra("selectedScheduleId", selectedScheduleId)
+                    }
+                    startActivity(intent)
+                } else {
+                    showToast("Ошибка: не удалось определить ID комиссии или расписания")
                 }
             } catch (e: Exception) {
                 showToast("Ошибка: ${e.message}")
             }
         }
+    }
+
+    private fun showSelectionDialog(title: String, items: List<String>, onItemSelected: (Int) -> Unit) {
+        if (items.isEmpty()) {
+            showToast("Нет доступных элементов для выбора")
+            return
+        }
+
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle(title)
+
+        val adapter = object : ArrayAdapter<String>(this, R.layout.dialog_list_item, items) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = convertView ?: LayoutInflater.from(context)
+                    .inflate(R.layout.dialog_list_item, parent, false)
+
+                val textView = view.findViewById<TextView>(R.id.text)
+                textView.text = getItem(position)
+
+                return view
+            }
+        }
+
+        val dialogView = layoutInflater.inflate(R.layout.dialog_selection, null)
+        val listView = dialogView.findViewById<ListView>(R.id.listView)
+        listView.adapter = adapter
+        builder.setView(dialogView)
+        builder.setNegativeButton("Отмена", null)
+        val dialog = builder.create()
+
+        listView.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
+            onItemSelected(position)
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun checkAuthStatus() {
@@ -160,7 +228,6 @@ class MainActivity : AppCompatActivity() {
             fullName
         }
     }
-
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_menu, menu)
@@ -219,37 +286,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupSpinners() {
-        updateSpinnerDpp(listOf("Выберите направление"))
-        updateSpinnerCommission(listOf("Выберите комиссию"))
-        updateSpinnerDefenseSchedule(listOf("Выберите дату защиты"))
-        spinnerCommission.isEnabled = false
-        spinnerDefenseSchedule.isEnabled = false
-    }
-
-
     private fun fetchSpecializations(apiService: ApiService, secretaryId: Int) {
         apiService.getSecretarySpecializations(secretaryId).enqueue(createCallback { responses ->
             this.specializationsList = responses.mapNotNull { it.ID_Specialization }
-            val specializationNames = listOf("Выберите направление") + this.specializationsList.map { it.Name ?: "" }
+            val specializationNames = this.specializationsList.map { it.Name ?: "" }
             updateSpinnerDpp(specializationNames)
         })
     }
 
-   private fun fetchCommissions(apiService: ApiService, secretaryId: Int, specializationId: Int) {
-       apiService.getCommissionsBySecretary(secretaryId, "Секретарь").enqueue(createCallback { responses ->
-           this.commissionsList =  responses.mapNotNull { it.ID_Commission }
-           val commissionNames = listOf("Выберите комиссию") + this.commissionsList.map { it.Name ?: "" }
-           updateSpinnerCommission(commissionNames)
-           spinnerCommission.isEnabled = true
-       })
-   }
+    private fun fetchCommissions(apiService: ApiService, secretaryId: Int, specializationId: Int) {
+        apiService.getCommissionsBySecretary(secretaryId, "Секретарь").enqueue(createCallback { responses ->
+            this.commissionsList = responses.mapNotNull { it.ID_Commission }
+            val commissionNames = this.commissionsList.map { it.Name ?: "" }
+            updateSpinnerCommission(commissionNames)
+        })
+    }
+
     private fun fetchDefenseSchedule(apiService: ApiService, specialization_id: Int) {
         apiService.getDefensesBySpecialization(specialization_id).enqueue(createCallback { responses ->
             this.defenseSchedulesList = responses
-            val dateTimeValues = listOf("Выберите дату защиты") + responses.map { formatDate(it.DateTime) }
+            val dateTimeValues = responses.map { formatDate(it.DateTime) }
             updateSpinnerDefenseSchedule(dateTimeValues)
-            spinnerDefenseSchedule.isEnabled = true
         })
     }
 
@@ -275,23 +332,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateSpinnerDpp(dppValues: List<String>) {
-        updateSpinner(spinnerDpp, dppValues)
+        this.dppValues = dppValues
+        if (dppValues.isEmpty()) {
+            spinnerDpp.setText("")
+        }
     }
 
     private fun updateSpinnerCommission(commissionValues: List<String>) {
-        updateSpinner(spinnerCommission, commissionValues)
+        this.commissionValues = commissionValues
+        spinnerCommission.setText("")
     }
 
     private fun updateSpinnerDefenseSchedule(scheduleValues: List<String>) {
-        updateSpinner(spinnerDefenseSchedule, scheduleValues)
-    }
-
-    private fun updateSpinner(spinner: AutoCompleteTextView, values: List<String>) {
-        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, values)
-        spinner.setAdapter(adapter)
-        if (values.isNotEmpty()) {
-            spinner.setText(values[0], false)
-        }
+        this.scheduleValues = scheduleValues
+        spinnerDefenseSchedule.setText("")
     }
 
     private fun sendCommissionId(apiService: ApiService, commissionId: Int, scheduleId: Int) {
@@ -304,13 +358,11 @@ class MainActivity : AppCompatActivity() {
                     showError(response.code())
                 }
             }
-
             override fun onFailure(call: Call<DefenseSchedule>, t: Throwable) {
                 showToast("Ошибка: ${t.message}")
             }
         })
     }
-
 
     private fun showToast(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show()

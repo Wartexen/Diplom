@@ -129,7 +129,9 @@
                             android:padding="12dp"
                             android:ellipsize="end"
                             android:maxLines="5"
-                            android:textSize="14sp"/>
+                            android:textSize="14sp"
+
+                            />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
