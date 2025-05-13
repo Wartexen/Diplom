@@ -87,6 +87,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
     private lateinit var actionMenuButton: ImageView
     private lateinit var defenseStartTimeTextView: TextView
 
+
     private var projectStatus = false
 
     private val savedAudioFiles = mutableListOf<String>()
