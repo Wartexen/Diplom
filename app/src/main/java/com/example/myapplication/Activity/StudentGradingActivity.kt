@@ -15,8 +15,6 @@ import com.example.myapplication.Adapter.StudentGradeAdapter
 import com.example.myapplication.Api.ApiService
 import com.example.myapplication.Models.Db.Project
 import com.example.myapplication.Models.Db.ProjectWithStudents
-import com.example.myapplication.Models.Requests.GradeRequest
-import com.example.myapplication.Models.Response.GradeResponse
 import com.example.myapplication.Models.Db.Student
 import com.example.myapplication.Models.Db.StudentGrade
 import com.example.myapplication.R
@@ -73,11 +71,7 @@ class StudentGradingActivity : AppCompatActivity() {
 
             buttonFinish = findViewById(R.id.buttonFinish)
             buttonFinish.setOnClickListener {
-                if (::adapter.isInitialized && adapter.areAllStudentsGraded()) {
-                    submitGrades()
-                } else {
-                    Toast.makeText(this, "Пожалуйста, оцените всех студентов", Toast.LENGTH_SHORT).show()
-                }
+                finishGrading()
             }
         } catch (e: Exception) {
             Toast.makeText(this, "Ошибка при инициализации: ${e.message}", Toast.LENGTH_LONG).show()
@@ -160,78 +154,26 @@ class StudentGradingActivity : AppCompatActivity() {
             return
         }
 
-        adapter = StudentGradeAdapter(projectsWithStudents)
+        adapter = StudentGradeAdapter(projectsWithStudents, apiService)
         recyclerView.adapter = adapter
     }
 
-    private fun submitGrades() {
-        progressBar.visibility = View.VISIBLE
-        buttonFinish.isEnabled = false
-
-        val grades = adapter.getGrades()
-        var submittedCount = 0
-        var errorCount = 0
-
-        if (grades.isEmpty()) {
-            progressBar.visibility = View.GONE
-            buttonFinish.isEnabled = true
-            Toast.makeText(this, "Нет студентов для оценивания", Toast.LENGTH_SHORT).show()
+    private fun finishGrading() {
+        if (!adapter.areAllStudentsGraded()) {
+            Toast.makeText(this, "Пожалуйста, оцените всех студентов", Toast.LENGTH_SHORT).show()
             return
         }
+        progressBar.visibility = View.VISIBLE
+        buttonFinish.isEnabled = false
+        FileUtils.deleteSavedAudioFiles(this@StudentGradingActivity)
+        Toast.makeText(
+            this,
+            "Все оценки сохранены. Аудиофайлы удалены",
+            Toast.LENGTH_SHORT
+        ).show()
 
-        for (studentGrade in grades) {
-            try {
-                val gradeRequest = GradeRequest(
-                    ID_Student = studentGrade.id,
-                    Grade = studentGrade.grade
-                )
-                apiService.gradeStudent(gradeRequest).enqueue(object : Callback<GradeResponse> {
-                    override fun onResponse(call: Call<GradeResponse>, response: Response<GradeResponse>) {
-                        submittedCount++
-                        if (response.isSuccessful) {
-                        } else {
-                            errorCount++
-                        }
-                        checkAllGradesSubmitted(submittedCount, errorCount, grades.size)
-                    }
-
-                    override fun onFailure(call: Call<GradeResponse>, t: Throwable) {
-                        submittedCount++
-                        errorCount++
-                        checkAllGradesSubmitted(submittedCount, errorCount, grades.size)
-                    }
-                })
-            } catch (e: Exception) {
-                submittedCount++
-                errorCount++
-                checkAllGradesSubmitted(submittedCount, errorCount, grades.size)
-            }
-        }
-    }
-
-    private fun checkAllGradesSubmitted(submittedCount: Int, errorCount: Int, totalCount: Int) {
-        if (submittedCount == totalCount) {
-            runOnUiThread {
-                progressBar.visibility = View.GONE
-                buttonFinish.isEnabled = true
-                if (errorCount == 0) {
-                    FileUtils.deleteSavedAudioFiles(this@StudentGradingActivity)
-                    Toast.makeText(
-                        this,
-                        "Все оценки успешно сохранены. Аудиофайлы удалены",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    startActivity(Intent(this@StudentGradingActivity, MainActivity::class.java))
-                    finish()
-                } else {
-                    Toast.makeText(
-                        this,
-                        "Ошибка при сохранении $errorCount оценок",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        }
+        startActivity(Intent(this@StudentGradingActivity, MainActivity::class.java))
+        finish()
     }
 
     object FileUtils {

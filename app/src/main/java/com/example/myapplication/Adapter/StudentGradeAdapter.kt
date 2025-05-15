@@ -1,5 +1,7 @@
 package com.example.myapplication.Adapter
 
+import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -7,13 +9,23 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
+import com.example.myapplication.Api.ApiService
 import com.example.myapplication.Models.Db.ProjectWithStudents
 import com.example.myapplication.Models.Db.StudentGrade
+import com.example.myapplication.Models.Requests.GradeRequest
+import com.example.myapplication.Models.Response.GradeResponse
 import com.example.myapplication.R
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-class StudentGradeAdapter(private val projects: List<ProjectWithStudents>) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+class StudentGradeAdapter(
+    projects: List<ProjectWithStudents>,
+    private val apiService: ApiService
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         private const val VIEW_TYPE_PROJECT_HEADER = 0
@@ -54,7 +66,6 @@ class StudentGradeAdapter(private val projects: List<ProjectWithStudents>) :
             else -> throw IllegalArgumentException(": $viewType")
         }
     }
-
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
             is ProjectHeaderViewHolder -> {
@@ -65,7 +76,6 @@ class StudentGradeAdapter(private val projects: List<ProjectWithStudents>) :
                 val student = items[position] as StudentGrade
 
                 holder.studentNameTextView.text = student.name
-
                 holder.groupTextView.text = student.groupName
 
                 val grades = listOf(
@@ -85,6 +95,8 @@ class StudentGradeAdapter(private val projects: List<ProjectWithStudents>) :
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 holder.gradeSpinner.adapter = adapter
 
+                var isInitialSetup = true
+
                 if (student.grade.isNotEmpty()) {
                     val index = grades.indexOf(student.grade)
                     if (index > 0) {
@@ -94,8 +106,16 @@ class StudentGradeAdapter(private val projects: List<ProjectWithStudents>) :
 
                 holder.gradeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                     override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
+                        if (isInitialSetup) {
+                            isInitialSetup = false
+                            return
+                        }
+
                         if (pos > 0) {
-                            student.grade = grades[pos]
+                            val selectedGrade = grades[pos]
+                            student.grade = selectedGrade
+
+                            submitGrade(student, holder.itemView.context)
                         } else {
                             student.grade = ""
                         }
@@ -108,7 +128,30 @@ class StudentGradeAdapter(private val projects: List<ProjectWithStudents>) :
         }
     }
 
+    private fun submitGrade(student: StudentGrade, context: Context) {
+        val gradeRequest = GradeRequest(ID_Student = student.id,Grade = student.grade)
+        apiService.gradeStudent(gradeRequest).enqueue(object : Callback<GradeResponse> {
+            override fun onResponse(call: Call<GradeResponse>, response: Response<GradeResponse>) {
+                if (!response.isSuccessful) {
+                    Toast.makeText(
+                        context,
+                        "Ошибка при сохранении оценки: ${response.code()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+
+            override fun onFailure(call: Call<GradeResponse>, t: Throwable) {
+                Toast.makeText(
+                    context,
+                    "Ошибка сети при сохранении оценки: ${t.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        })
+    }
     override fun getItemCount() = items.size
+
     private fun flattenProjects(projects: List<ProjectWithStudents>): List<Any> {
         val result = mutableListOf<Any>()
 

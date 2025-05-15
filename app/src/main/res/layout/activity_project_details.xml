@@ -165,30 +165,30 @@
                         android:layout_height="1dp"
                         android:background="#E0E0E0" />
 
-<!--                    <LinearLayout-->
-<!--                        android:layout_width="match_parent"-->
-<!--                        android:layout_height="wrap_content"-->
-<!--                        android:orientation="horizontal"-->
-<!--                        android:background="#F8F8F8"-->
-<!--                        android:padding="12dp">-->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:background="#F8F8F8"
+                        android:padding="12dp">
 
-<!--                        <TextView-->
-<!--                            android:layout_width="wrap_content"-->
-<!--                            android:layout_height="wrap_content"-->
-<!--                            android:text="Конец защиты: "-->
-<!--                            android:textSize="16sp"-->
-<!--                            android:textStyle="bold"-->
-<!--                            android:textColor="#3A8890" />-->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Конец защиты: "
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#3A8890" />
 
-<!--                        <TextView-->
-<!--                            android:id="@+id/defenseEndTimeTextView"-->
-<!--                            android:layout_width="wrap_content"-->
-<!--                            android:layout_height="wrap_content"-->
-<!--                            android:textSize="14sp"-->
-<!--                            android:textColor="#000000"-->
-<!--                            android:layout_gravity="center_vertical"-->
-<!--                            android:text="Не завершена" />-->
-<!--                    </LinearLayout>-->
+                        <TextView
+                            android:id="@+id/defenseEndTimeTextView"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            android:textColor="#000000"
+                            android:layout_gravity="center_vertical"
+                            android:text="Не завершена" />
+                    </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"

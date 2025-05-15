@@ -3,7 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/action_change_time"
-        android:title="Изменить время начала"
+        android:title="Изменить время начала защиты"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_change_end_time"
+        android:title="Изменить время конца защиты"
         app:showAsAction="never" />
     <item
         android:id="@+id/action_cancel_defense"

@@ -86,7 +86,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
     private lateinit var btnStartDefense: Button
     private lateinit var actionMenuButton: ImageView
     private lateinit var defenseStartTimeTextView: TextView
-
+    private lateinit var defenseEndTimeTextView: TextView
 
     private var projectStatus = false
 
@@ -126,6 +126,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
         btnStartDefense = findViewById(R.id.btnStartDefense)
         actionMenuButton = findViewById(R.id.actionMenuButton)
         defenseStartTimeTextView = findViewById(R.id.defenseStartTimeTextView)
+        defenseEndTimeTextView = findViewById(R.id.defenseEndTimeTextView)
 
         sharedPref = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
         toolbar = findViewById(R.id.toolbar)
@@ -364,7 +365,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
 
                     if (students.isNotEmpty()) {
                         val firstStudentId = students[0].ID
-                        checkDefenseStartTime(firstStudentId)
+                        checkDefenseStartEndTime(firstStudentId)
                     } else {
                         startDefenseContainer.visibility = View.VISIBLE
                         mainContentContainer.visibility = View.GONE
@@ -382,7 +383,8 @@ class ProjectDetailsActivity : AppCompatActivity() {
         })
     }
 
-    private fun checkDefenseStartTime(studentId: Int) {
+
+    private fun checkDefenseStartEndTime(studentId: Int) {
         apiService.getProtocolsByStudentId(studentId).enqueue(object : Callback<List<Protocol>> {
             override fun onResponse(call: Call<List<Protocol>>, response: Response<List<Protocol>>) {
                 if (response.isSuccessful) {
@@ -391,6 +393,8 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     if (protocols.isNotEmpty()) {
                         val protocol = protocols[0]
                         val defenseStartTime = protocol.DefenseStartTime
+                        val defenseEndTime = protocol.DefenseEndTime
+
                         if (defenseStartTime.isNullOrEmpty()) {
                             startDefenseContainer.visibility = View.VISIBLE
                             mainContentContainer.visibility = View.GONE
@@ -403,6 +407,10 @@ class ProjectDetailsActivity : AppCompatActivity() {
 
                             defenseStartTimeTextView.text = defenseStartTime
 
+                            if (!defenseEndTime.isNullOrEmpty()) {
+                                defenseEndTimeTextView.text = defenseEndTime
+                            }
+
                             sendQuestionsRequest(project.ID)
                         }
                     } else {
@@ -412,7 +420,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                         defenseStartTimeTextView.text = "Не начата"
                     }
                 } else {
-
+                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при получении протоколов", Toast.LENGTH_SHORT).show()
                     startDefenseContainer.visibility = View.VISIBLE
                     mainContentContainer.visibility = View.GONE
                     actionMenuButton.visibility = View.GONE
@@ -420,6 +428,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 }
             }
             override fun onFailure(call: Call<List<Protocol>>, t: Throwable) {
+                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при получении протоколов", Toast.LENGTH_SHORT).show()
                 startDefenseContainer.visibility = View.VISIBLE
                 mainContentContainer.visibility = View.GONE
                 actionMenuButton.visibility = View.GONE
@@ -499,7 +508,11 @@ class ProjectDetailsActivity : AppCompatActivity() {
         popup.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.action_change_time -> {
-                    showChangeTimeDialog()
+                    showChangeStartTimeDialog()
+                    true
+                }
+                R.id.action_change_end_time -> {
+                    showChangeEndTimeDialog()
                     true
                 }
                 R.id.action_cancel_defense -> {
@@ -522,13 +535,26 @@ class ProjectDetailsActivity : AppCompatActivity() {
                 apiService.setProjectStartTime(projectTimeRequest).enqueue(object : Callback<Void> {
                     override fun onResponse(call: Call<Void>, response: Response<Void>) {
                         if (response.isSuccessful) {
+                            val projectTimeEndRequest = ProjectTimeEndRequest(ID_Project = project.ID, DefenseEndTime = null)
+                            apiService.setProjectEndTime(projectTimeEndRequest).enqueue(object : Callback<Void> {
+                                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                                    if (response.isSuccessful) {
+                                        mainContentContainer.visibility = View.GONE
+                                        startDefenseContainer.visibility = View.VISIBLE
+                                        actionMenuButton.visibility = View.GONE
+                                        defenseStartTimeTextView.text = "Не начата"
+                                        defenseEndTimeTextView.text = "Не завершена"
 
-                            mainContentContainer.visibility = View.GONE
-                            startDefenseContainer.visibility = View.VISIBLE
-                            actionMenuButton.visibility = View.GONE
-                            defenseStartTimeTextView.text = "Не начата"
+                                        Toast.makeText(this@ProjectDetailsActivity, "Защита отменена", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(this@ProjectDetailsActivity, "Ошибка при сбросе времени окончания защиты", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
 
-                            Toast.makeText(this@ProjectDetailsActivity, "Защита отменена", Toast.LENGTH_SHORT).show()
+                                override fun onFailure(call: Call<Void>, t: Throwable) {
+                                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при сбросе времени окончания защиты", Toast.LENGTH_SHORT).show()
+                                }
+                            })
                         } else {
                             Toast.makeText(this@ProjectDetailsActivity, "Ошибка при отмене защиты", Toast.LENGTH_SHORT).show()
                         }
@@ -872,7 +898,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
         })
     }
 
-    private fun showChangeTimeDialog() {
+    private fun showChangeStartTimeDialog() {
         val calendar = Calendar.getInstance()
         val hour = calendar.get(Calendar.HOUR_OF_DAY)
         val minute = calendar.get(Calendar.MINUTE)
@@ -904,6 +930,54 @@ class ProjectDetailsActivity : AppCompatActivity() {
                             override fun onFailure(call: Call<Void>, t: Throwable) {
                                 Toast.makeText(this@ProjectDetailsActivity,
                                     "Ошибка сети при изменении времени начала защиты: ${t.message}",
+                                    Toast.LENGTH_SHORT).show()
+                            }
+                        })
+                    }
+                    .setNegativeButton("Отмена", null)
+                    .show()
+            },
+            hour,
+            minute,
+            true
+        )
+
+        timePickerDialog.show()
+    }
+
+
+    private fun showChangeEndTimeDialog() {
+        val calendar = Calendar.getInstance()
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        val minute = calendar.get(Calendar.MINUTE)
+
+        val timePickerDialog = android.app.TimePickerDialog(
+            this,
+            { _, selectedHour, selectedMinute ->
+                val selectedTime = String.format("%02d:%02d:00", selectedHour, selectedMinute)
+
+                MaterialAlertDialogBuilder(this)
+                    .setTitle("Изменить время конца заищты")
+                    .setMessage("Вы уверены, что хотите изменить время конца защиты на $selectedTime?")
+                    .setPositiveButton("Да") { _, _ ->
+                        val projectTimeEndRequest = ProjectTimeEndRequest(ID_Project = project.ID, DefenseEndTime = selectedTime)
+                        apiService.setProjectEndTime(projectTimeEndRequest).enqueue(object : Callback<Void> {
+                            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                                if (response.isSuccessful) {
+                                    defenseEndTimeTextView.text = selectedTime
+                                    Toast.makeText(this@ProjectDetailsActivity,
+                                        "Время конца защиты изменено на $selectedTime",
+                                        Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(this@ProjectDetailsActivity,
+                                        "Ошибка при изменении времени конца защиты: ${response.code()}",
+                                        Toast.LENGTH_SHORT).show()
+                                }
+                            }
+
+                            override fun onFailure(call: Call<Void>, t: Throwable) {
+                                Toast.makeText(this@ProjectDetailsActivity,
+                                    "Ошибка сети при изменении времени конца защиты: ${t.message}",
                                     Toast.LENGTH_SHORT).show()
                             }
                         })
