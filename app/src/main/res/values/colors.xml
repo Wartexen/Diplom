@@ -3,9 +3,12 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="launch">#FFFFFF</color>
-    <!-- Status colors -->
     <color name="status_ready">#4CAF50</color>
     <color name="status_not_ready">#F44336</color>
     <color name="primary_color">#3A8890</color>
     <color name="primary_color_dark">#3A8890</color>
+    <color name="status_not_started">#F25F30</color>
+    <color name="status_in_progress">#B1AB2F</color>
+    <color name="status_processing">#32C3C0</color>
+    <color name="status_error">#F44336</color>
 </resources>

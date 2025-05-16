@@ -13,6 +13,7 @@ import com.example.myapplication.Models.Requests.QuestionUpdateRequest
 import com.example.myapplication.Models.Response.CommissionResponse
 import com.example.myapplication.Models.Response.SecretarySpecializationResponse
 import com.example.myapplication.Models.Db.Student
+import com.example.myapplication.Models.Requests.ProjectStatusUpdateRequest
 import com.example.myapplication.Models.Requests.ProjectTimeEndRequest
 import com.example.myapplication.Models.Response.UploadResponse
 import okhttp3.MultipartBody
@@ -50,6 +51,11 @@ interface ApiService {
     @PATCH("api/projects/project_time_end/")
     fun setProjectEndTime(@Body request: ProjectTimeEndRequest): Call<Void>
 
+    @PATCH("api/projects/{projectId}/")
+    fun updateProjectStatus(
+        @Path("projectId") projectId: Int,
+        @Body request: ProjectStatusUpdateRequest
+    ): Call<Project>
 
 
 

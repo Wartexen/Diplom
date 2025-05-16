@@ -35,24 +35,32 @@
             android:layout_marginBottom="12dp" />
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
 
             <View
                 android:id="@+id/statusIndicator"
                 android:layout_width="12dp"
                 android:layout_height="12dp"
-                android:background="@drawable/status_indicator_not_ready"
-                android:layout_marginEnd="8dp" />
+                android:background="@drawable/status_indicator_not_started"
+                android:layout_marginEnd="8dp"/>
 
             <TextView
                 android:id="@+id/statusText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:text="Не готов" />
+                android:text="Статус"
+                android:textSize="14sp"/>
+
+            <ImageView
+                android:id="@+id/statusIcon"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="4dp"
+                android:visibility="gone"/>
         </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

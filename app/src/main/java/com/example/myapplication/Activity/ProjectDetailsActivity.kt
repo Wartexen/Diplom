@@ -45,6 +45,7 @@ import com.example.myapplication.R
 import com.example.myapplication.Adapter.StudentAdapter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import android.widget.EditText
+import com.example.myapplication.Models.Requests.ProjectStatusUpdateRequest
 import com.example.myapplication.Models.Requests.ProjectTimeEndRequest
 import com.example.myapplication.Models.Requests.QuestionRequest
 import com.example.myapplication.Models.Requests.ProjectTimeRequest
@@ -88,7 +89,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
     private lateinit var defenseStartTimeTextView: TextView
     private lateinit var defenseEndTimeTextView: TextView
 
-    private var projectStatus = false
+    private var projectStatus = null
 
     private val savedAudioFiles = mutableListOf<String>()
 
@@ -338,7 +339,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                     val projectResponse = response.body()
                     if (projectResponse != null) {
                         project = projectResponse
-                        projectStatus = projectResponse.Status
+                        updateUIBasedOnStatus()
                     }
                 } else {
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка при получении статуса проекта", Toast.LENGTH_SHORT).show()
@@ -383,7 +384,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
         })
     }
 
-
     private fun checkDefenseStartEndTime(studentId: Int) {
         apiService.getProtocolsByStudentId(studentId).enqueue(object : Callback<List<Protocol>> {
             override fun onResponse(call: Call<List<Protocol>>, response: Response<List<Protocol>>) {
@@ -396,21 +396,19 @@ class ProjectDetailsActivity : AppCompatActivity() {
                         val defenseEndTime = protocol.DefenseEndTime
 
                         if (defenseStartTime.isNullOrEmpty()) {
-                            startDefenseContainer.visibility = View.VISIBLE
-                            mainContentContainer.visibility = View.GONE
-                            actionMenuButton.visibility = View.GONE
                             defenseStartTimeTextView.text = "Не начата"
                         } else {
-                            startDefenseContainer.visibility = View.GONE
-                            mainContentContainer.visibility = View.VISIBLE
-                            actionMenuButton.visibility = View.VISIBLE
-
                             defenseStartTimeTextView.text = defenseStartTime
+                        }
 
-                            if (!defenseEndTime.isNullOrEmpty()) {
-                                defenseEndTimeTextView.text = defenseEndTime
-                            }
+                        if (!defenseEndTime.isNullOrEmpty()) {
+                            defenseEndTimeTextView.text = defenseEndTime
+                        } else {
+                            defenseEndTimeTextView.text = "Не завершена"
+                        }
 
+                        updateUIBasedOnStatus()
+                        if (project.Status != "Защита не начата" && project.Status != null) {
                             sendQuestionsRequest(project.ID)
                         }
                     } else {
@@ -437,12 +435,28 @@ class ProjectDetailsActivity : AppCompatActivity() {
         })
     }
 
+    private fun updateUIBasedOnStatus() {
+        when (project.Status) {
+            "Защита не начата", null -> {
+                startDefenseContainer.visibility = View.VISIBLE
+                mainContentContainer.visibility = View.GONE
+                actionMenuButton.visibility = View.GONE
+            }
+            else -> {
+                startDefenseContainer.visibility = View.GONE
+                mainContentContainer.visibility = View.VISIBLE
+                actionMenuButton.visibility = View.VISIBLE
+            }
+        }
+    }
+
     private fun startDefense() {
         val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
         MaterialAlertDialogBuilder(this)
             .setTitle("Начать защиту")
             .setMessage("Вы уверены, что хотите начать защиту проекта? Время начала: $currentTime")
             .setPositiveButton("Да") { _, _ ->
+
                 val projectTimeRequest = ProjectTimeRequest(ID_Project = project.ID, DefenseStartTime = currentTime)
                 apiService.setProjectStartTime(projectTimeRequest).enqueue(object : Callback<Void> {
                     override fun onResponse(call: Call<Void>, response: Response<Void>) {
@@ -526,49 +540,50 @@ class ProjectDetailsActivity : AppCompatActivity() {
         popup.show()
     }
 
-    private fun showCancelDefenseConfirmation() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Отменить защиту")
-            .setMessage("Вы уверены, что хотите отменить защиту проекта?")
-            .setPositiveButton("Да") { _, _ ->
-                val projectTimeRequest = ProjectTimeRequest(ID_Project = project.ID, DefenseStartTime = null)
-                apiService.setProjectStartTime(projectTimeRequest).enqueue(object : Callback<Void> {
-                    override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                        if (response.isSuccessful) {
-                            val projectTimeEndRequest = ProjectTimeEndRequest(ID_Project = project.ID, DefenseEndTime = null)
-                            apiService.setProjectEndTime(projectTimeEndRequest).enqueue(object : Callback<Void> {
-                                override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                                    if (response.isSuccessful) {
-                                        mainContentContainer.visibility = View.GONE
-                                        startDefenseContainer.visibility = View.VISIBLE
-                                        actionMenuButton.visibility = View.GONE
-                                        defenseStartTimeTextView.text = "Не начата"
-                                        defenseEndTimeTextView.text = "Не завершена"
+private fun showCancelDefenseConfirmation() {
+    MaterialAlertDialogBuilder(this)
+        .setTitle("Отменить защиту")
+        .setMessage("Вы уверены, что хотите отменить защиту проекта?")
+        .setPositiveButton("Да") { _, _ ->
+            updateProjectStatus(project.ID, null)
 
-                                        Toast.makeText(this@ProjectDetailsActivity, "Защита отменена", Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        Toast.makeText(this@ProjectDetailsActivity, "Ошибка при сбросе времени окончания защиты", Toast.LENGTH_SHORT).show()
-                                    }
+            val projectTimeRequest = ProjectTimeRequest(ID_Project = project.ID, DefenseStartTime = null)
+            apiService.setProjectStartTime(projectTimeRequest).enqueue(object : Callback<Void> {
+                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                    if (response.isSuccessful) {
+                        val projectTimeEndRequest = ProjectTimeEndRequest(ID_Project = project.ID, DefenseEndTime = null)
+                        apiService.setProjectEndTime(projectTimeEndRequest).enqueue(object : Callback<Void> {
+                            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                                if (response.isSuccessful) {
+                                    startDefenseContainer.visibility = View.VISIBLE
+                                    mainContentContainer.visibility = View.GONE
+                                    actionMenuButton.visibility = View.GONE
+                                    defenseStartTimeTextView.text = "Не начата"
+                                    defenseEndTimeTextView.text = "Не завершена"
+
+                                    Toast.makeText(this@ProjectDetailsActivity, "Защита отменена", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка при сбросе времени окончания защиты", Toast.LENGTH_SHORT).show()
                                 }
+                            }
 
-                                override fun onFailure(call: Call<Void>, t: Throwable) {
-                                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при сбросе времени окончания защиты", Toast.LENGTH_SHORT).show()
-                                }
-                            })
-                        } else {
-                            Toast.makeText(this@ProjectDetailsActivity, "Ошибка при отмене защиты", Toast.LENGTH_SHORT).show()
-                        }
+                            override fun onFailure(call: Call<Void>, t: Throwable) {
+                                Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при сбросе времени окончания защиты", Toast.LENGTH_SHORT).show()
+                            }
+                        })
+                    } else {
+                        Toast.makeText(this@ProjectDetailsActivity, "Ошибка при отмене защиты", Toast.LENGTH_SHORT).show()
                     }
+                }
 
-                    override fun onFailure(call: Call<Void>, t: Throwable) {
-                        Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при отмене защиты", Toast.LENGTH_SHORT).show()
-                    }
-                })
-            }
-            .setNegativeButton("Нет", null)
-            .show()
-    }
-
+                override fun onFailure(call: Call<Void>, t: Throwable) {
+                    Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при отмене защиты", Toast.LENGTH_SHORT).show()
+                }
+            })
+        }
+        .setNegativeButton("Нет", null)
+        .show()
+}
     private fun checkAuthStatus() {
         val isLoggedIn = sharedPref.getBoolean("isLoggedIn", false)
         if (!isLoggedIn) {
@@ -788,6 +803,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
                         }
                     }
                 } else {
+                    updateProjectStatus(project.ID, "Ошибка загрузки аудио..")
                     Toast.makeText(this@ProjectDetailsActivity, "Ошибка при отправке аудио", Toast.LENGTH_SHORT).show()
                     if (saveOnError && filePath == audioFilePath) {
                         val savedFilePath = saveAudioFileToDevice()
@@ -807,6 +823,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
 
             override fun onFailure(call: Call<UploadResponse>, t: Throwable) {
                 Log.e("Upload Error", t.message ?: "Неизвестная ошибка")
+                updateProjectStatus(project.ID, "Ошибка загрузки аудио..")
                 Toast.makeText(this@ProjectDetailsActivity, "Ошибка сети при отправке аудио", Toast.LENGTH_SHORT).show()
                 if (saveOnError && filePath == audioFilePath) {
                     val savedFilePath = saveAudioFileToDevice()
@@ -826,6 +843,22 @@ class ProjectDetailsActivity : AppCompatActivity() {
         })
     }
 
+    private fun updateProjectStatus(projectId: Int, status: String?) {
+        val statusRequest = ProjectStatusUpdateRequest(projectId, status)
+        apiService.updateProjectStatus(projectId, statusRequest).enqueue(object : Callback<Project> {
+            override fun onResponse(call: Call<Project>, response: Response<Project>) {
+                if (response.isSuccessful) {
+                    project = response.body() ?: project
+                    Log.d(TAG, "Project status updated to: ${project.Status}")
+                } else {
+                    Log.e(TAG, "Failed to update project status: ${response.code()}")
+                }
+            }
+            override fun onFailure(call: Call<Project>, t: Throwable) {
+                Log.e(TAG, "Network error updating project status: ${t.message}")
+            }
+        })
+    }
 
     private fun updateQuestionOnServer(questionId: Int, newText: String) {
         val updateRequest = QuestionUpdateRequest(newText)

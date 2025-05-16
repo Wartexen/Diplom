@@ -206,11 +206,14 @@ class ProjectListActivity : AppCompatActivity() {
         super.onResume()
         if (!sharedPref.getBoolean("isLoggedIn", false)) {
             logout()
+        } else if (::adapter.isInitialized && selectedScheduleId != -1) {
+            refreshProjects()
         }
     }
 
     private fun refreshProjects() {
         if (selectedScheduleId != -1) {
+            swipeRefreshLayout.isRefreshing = true
             getProjects(apiService, selectedScheduleId)
         } else {
             swipeRefreshLayout.isRefreshing = false
@@ -270,7 +273,7 @@ class ProjectListActivity : AppCompatActivity() {
         })
     }
 
-    private fun updateProjectInList(projectId: Int, newStatus: Boolean) {
+    private fun updateProjectInList(projectId: Int, newStatus: String?) {
         val updatedProjects = projectsList.map { project ->
             if (project.ID == projectId) {
                 Project(project.ID, project.Title, project.Supervisor, newStatus)

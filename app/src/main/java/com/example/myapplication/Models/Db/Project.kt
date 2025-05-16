@@ -7,7 +7,7 @@ data class Project(
     val ID: Int,
     val Title: String,
     val Supervisor: String,
-    val Status: Boolean = false,
+    val Status: String? = null,
     val DefenseStartTime: String? = null
 
 ) : Parcelable {
@@ -15,7 +15,7 @@ data class Project(
         parcel.readInt(),
         parcel.readString().toString(),
         parcel.readString().toString(),
-        parcel.readByte() != 0.toByte(),
+        parcel.readString(),
         parcel.readString()
     ) {
     }
@@ -24,7 +24,7 @@ data class Project(
         parcel.writeInt(ID)
         parcel.writeString(Title)
         parcel.writeString(Supervisor)
-        parcel.writeByte(if (Status) 1 else 0)
+        parcel.writeString(Status)
         parcel.writeString(DefenseStartTime)
     }
 
@@ -42,4 +42,5 @@ data class Project(
         }
     }
 }
+
 
