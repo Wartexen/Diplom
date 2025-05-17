@@ -22,42 +22,39 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
+            android:orientation="horizontal"
             android:paddingVertical="8dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
+            <ImageView
+                android:id="@+id/profileIcon"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                android:layout_marginLeft="6dp"
+                app:tint="@color/white" />
+
+            <TextView
+                android:id="@+id/userName"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp">
+                android:textColor="@color/white"
+                tools:text=" " />
+<!--            <LinearLayout-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:gravity="center_vertical"-->
+<!--                android:orientation="horizontal"-->
+<!--                android:paddingStart="16dp"-->
+<!--                android:paddingEnd="16dp">-->
 
-                <ImageView
-                    android:id="@+id/profileIcon"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_profile"
-                    android:contentDescription="@string/profile_icon_desc"
-                    app:tint="@color/white" />
-
-                <TextView
-                    android:id="@+id/userName"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
-                    tools:text=" " />
-            </LinearLayout>
+<!--               -->
+<!--            </LinearLayout>-->
 
             <TextView
                 android:id="@+id/titleText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
+
                 android:gravity="center"
                 android:text="Оценивание студентов"
                 android:textColor="@color/white"

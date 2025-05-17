@@ -58,9 +58,9 @@ class ProjectListActivity : AppCompatActivity() {
 
             this.selectedScheduleId = selectedScheduleId
 
-            val selectedDppTextView = findViewById<TextView>(R.id.selectedDpp)
-            val selectedCommissionTextView = findViewById<TextView>(R.id.selectedCommission)
-            val selectedDateTextView = findViewById<TextView>(R.id.selectedDate)
+            val selectedDppTextView = findViewById<TextView>(R.id.tvSelectedDpp)
+            val selectedCommissionTextView = findViewById<TextView>(R.id.tvSelectedCommission)
+            val selectedDateTextView = findViewById<TextView>(R.id.tvSelectedDate)
 
             selectedDppTextView.text = selectedDpp ?: "Не указано"
             selectedCommissionTextView.text = selectedCommission ?: "Не указано"
@@ -130,8 +130,8 @@ class ProjectListActivity : AppCompatActivity() {
             startActivity(Intent(this, BitrixAuthActivity::class.java))
             finish()
         } else {
-            val fullName = sharedPref.getString("fullName", "") ?: ""
-            userName.text = formatUserName(fullName)
+            //val fullName = sharedPref.getString("fullName", "") ?: ""
+           // userName.text = formatUserName(fullName)
             profileIcon.setOnClickListener {
                 showProfilePopup(it)
             }

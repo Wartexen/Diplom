@@ -11,25 +11,26 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="#3A8890"
-        android:elevation="2dp"
+        android:elevation="4dp"
         android:minHeight="?attr/actionBarSize"
+        android:paddingVertical="4dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:contentInsetStart="0dp">
+        app:layout_constraintTop_toTopOf="parent">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingVertical="12dp">
+            android:layout_height="wrap_content">
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:id="@+id/profileSection"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:paddingHorizontal="16dp">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent">
 
                 <ImageView
                     android:id="@+id/profileIcon"
@@ -37,15 +38,15 @@
                     android:layout_height="28dp"
                     android:src="@drawable/ic_profile"
                     android:contentDescription="@string/profile_icon_desc"
-                    app:tint="@color/white" />
+                    app:tint="@android:color/white" />
 
                 <TextView
                     android:id="@+id/userName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:textColor="@color/white"
-                    android:textSize="16sp"
+                    android:layout_marginStart="8dp"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
                     android:maxLines="1"
                     android:ellipsize="end"
                     tools:text="Иванов И.И." />
@@ -53,15 +54,23 @@
 
             <TextView
                 android:id="@+id/titleText"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="55dp"
+                android:ellipsize="end"
                 android:gravity="center"
-                android:textColor="@color/white"
-                android:textSize="22sp"
-                android:fontFamily="sans-serif-medium"
-                android:layout_marginTop="8dp"
-                android:text="Защита проектов"/>
-        </LinearLayout>
+                android:maxLines="1"
+                android:text="Защита проектов"
+                android:textColor="@android:color/white"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/profileSection"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.appcompat.widget.Toolbar>
 
     <androidx.core.widget.NestedScrollView
