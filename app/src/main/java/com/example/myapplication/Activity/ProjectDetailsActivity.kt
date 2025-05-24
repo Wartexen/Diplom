@@ -135,7 +135,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
         checkAuthStatus()
 
         val retrofit = Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8000/")
+            .baseUrl("http://172.20.10.5:8000/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 

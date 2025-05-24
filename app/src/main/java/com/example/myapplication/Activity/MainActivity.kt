@@ -26,6 +26,7 @@ import com.example.myapplication.Models.Db.Commission
 import com.example.myapplication.Models.Db.DefenseSchedule
 import com.example.myapplication.Models.Requests.CommissionScheduleRequest
 import com.example.myapplication.Models.Db.Specialization
+import com.example.myapplication.ProjectListActivity
 import com.example.myapplication.R
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import retrofit2.Call
@@ -75,7 +76,7 @@ class MainActivity : AppCompatActivity() {
         spinnerDefenseSchedule.isEnabled = false
 
         val retrofit = Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8000/")
+            .baseUrl("http://172.20.10.5:8000/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 

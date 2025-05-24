@@ -58,7 +58,7 @@ class BitrixAuthActivity : AppCompatActivity() {
         setContentView(R.layout.activity_bitrix_auth)
 
         val retrofit = Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:8000/")
+            .baseUrl("http://172.20.10.5:8000/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
@@ -273,41 +273,63 @@ class BitrixAuthActivity : AppCompatActivity() {
             name = name,
             patronymic = patronymic,
             surname = surname
-        ).enqueue(object : retrofit2.Callback<SecretaryIdResponse> {
+        ).enqueue(object : retrofit2.Callback<List<SecretaryIdResponse>> {
             override fun onResponse(
-                call: retrofit2.Call<SecretaryIdResponse>,
-                response: retrofit2.Response<SecretaryIdResponse>
+                call: retrofit2.Call<List<SecretaryIdResponse>>,
+                response: retrofit2.Response<List<SecretaryIdResponse>>
             ) {
-                if (response.isSuccessful) {
-                    response.body()?.let { secretaryIdResponse ->
-                        val secretaryId = secretaryIdResponse.id
-                        val fullName = "$surname $name $patronymic"
-
-                        // Сохраняем данные пользователя
-                        saveUserData(secretaryId, fullName)
-
-                        // Переходим в MainActivity
-                        val intent = Intent(this@BitrixAuthActivity, MainActivity::class.java).apply {
-                            putExtra("secretaryId", secretaryId)
-                            putExtra("fullName", fullName)
+                when {
+                    response.isSuccessful -> {
+                        response.body()?.let { responses ->
+                            when {
+                                responses.size > 1 -> {
+                                    showToast("Найдено несколько секретарей")
+                                    finishWithError("Multiple secretaries found")
+                                }
+                                responses.isNotEmpty() -> {
+                                    val secretary = responses[0]
+                                    handleSuccessResponse(secretary, surname, name, patronymic)
+                                }
+                                else -> {
+                                    showToast("Секретарь не найден")
+                                    finishWithError("Secretary not found")
+                                }
+                            }
+                        } ?: run {
+                            showToast("Пустой ответ сервера")
+                            finishWithError("Empty response")
                         }
-                        startActivity(intent)
-                        finish()
-                    } ?: run {
-                        showToast("Пустой ответ сервера")
-                        finishWithError("Empty response from server")
                     }
-                } else {
-                    showToast("Ошибка сервера: ${response.code()}")
-                    finishWithError("Server error: ${response.code()}")
+                    else -> {
+                        showToast("Ошибка сервера: ${response.code()}")
+                        finishWithError("Server error: ${response.code()}")
+                    }
                 }
             }
 
-            override fun onFailure(call: retrofit2.Call<SecretaryIdResponse>, t: Throwable) {
+            override fun onFailure(call: retrofit2.Call<List<SecretaryIdResponse>>, t: Throwable) {
                 showToast("Ошибка сети: ${t.message}")
                 finishWithError("Network error: ${t.message}")
             }
         })
+    }
+
+    private fun handleSuccessResponse(
+        secretary: SecretaryIdResponse,
+        surname: String,
+        name: String,
+        patronymic: String
+    ) {
+        val secretaryId = secretary.ID
+        val fullName = "$surname $name $patronymic"
+
+        saveUserData(secretaryId, fullName)
+
+        startActivity(Intent(this@BitrixAuthActivity, MainActivity::class.java).apply {
+            putExtra("secretaryId", secretaryId)
+            putExtra("fullName", fullName)
+        })
+        finish()
     }
     /*private fun getSecretaryId(apiService: ApiService, surname: String, name: String, patronymic: String) {
         val requestBody = mapOf(

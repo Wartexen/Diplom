@@ -83,10 +83,10 @@ interface ApiService {
 
     @GET("api/secretary/")
     fun getSecretaryId(
-        @Query("name") name: String,
-        @Query("patronymic") patronymic: String,
-        @Query("surname") surname: String
-    ): Call<SecretaryIdResponse>
+        @Query("Name") name: String,
+        @Query("Patronymic") patronymic: String,
+        @Query("Surname") surname: String
+    ): Call<List<SecretaryIdResponse>>
 
     @GET("api/protocols/")
     fun getProtocolsByStudentId(@Query("ID_Student") studentId: Int): Call<List<Protocol>>
