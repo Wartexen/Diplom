@@ -130,8 +130,8 @@ class ProjectListActivity : AppCompatActivity() {
             startActivity(Intent(this, BitrixAuthActivity::class.java))
             finish()
         } else {
-            //val fullName = sharedPref.getString("fullName", "") ?: ""
-           // userName.text = formatUserName(fullName)
+            val fullName = sharedPref.getString("fullName", "") ?: ""
+            userName.text = formatUserName(fullName)
             profileIcon.setOnClickListener {
                 showProfilePopup(it)
             }

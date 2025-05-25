@@ -1,7 +1,7 @@
 package com.example.myapplication.Models.Db
-
-data class Commission(
+data class Member(
     val ID: Int,
+    val Surname: String,
     val Name: String,
-    val members: List<CommissionMember>
+    val Patronymic: String
 )

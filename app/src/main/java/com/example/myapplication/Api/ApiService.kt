@@ -7,12 +7,15 @@ import com.example.myapplication.Models.Db.Project
 import com.example.myapplication.Models.Db.Question
 import com.example.myapplication.Models.Requests.QuestionRequest
 import com.example.myapplication.Models.Auth.SecretaryIdResponse
+import com.example.myapplication.Models.Auth.SecretaryResponse
+import com.example.myapplication.Models.Db.Commission
 import com.example.myapplication.Models.Db.Protocol
 import com.example.myapplication.Models.Requests.ProjectTimeRequest
 import com.example.myapplication.Models.Requests.QuestionUpdateRequest
 import com.example.myapplication.Models.Response.CommissionResponse
 import com.example.myapplication.Models.Response.SecretarySpecializationResponse
 import com.example.myapplication.Models.Db.Student
+import com.example.myapplication.Models.Requests.BitrixAuthRequest
 import com.example.myapplication.Models.Requests.ProjectStatusUpdateRequest
 import com.example.myapplication.Models.Requests.ProjectTimeEndRequest
 import com.example.myapplication.Models.Response.UploadResponse
@@ -30,6 +33,9 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
+
+    @POST("api/accounts/bitrix-auth/")
+    fun exchangeBitrixCode(@Body request: BitrixAuthRequest): Call<List<SecretaryResponse>>
     @PATCH("api/defenses/{ID}/")
     fun updateDefenseSchedule(
         @Path("ID") id: Int,
@@ -83,9 +89,9 @@ interface ApiService {
 
     @GET("api/commissions/")
     fun getCommissionsBySecretary(
-        @Query("ID_Member") secretaryId: Int,
-        @Query("Role") role: String
-    ): Call<List<CommissionResponse>>
+        @Query("id_member") secretaryId: Int,
+        @Query("role") role: String
+    ): Call<List<Commission>>
 
     @GET("api/secretary/")
     fun getSecretaryId(
