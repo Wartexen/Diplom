@@ -6,13 +6,11 @@ import com.example.myapplication.Models.Response.GradeResponse
 import com.example.myapplication.Models.Db.Project
 import com.example.myapplication.Models.Db.Question
 import com.example.myapplication.Models.Requests.QuestionRequest
-import com.example.myapplication.Models.Auth.SecretaryIdResponse
 import com.example.myapplication.Models.Auth.SecretaryResponse
 import com.example.myapplication.Models.Db.Commission
 import com.example.myapplication.Models.Db.Protocol
 import com.example.myapplication.Models.Requests.ProjectTimeRequest
 import com.example.myapplication.Models.Requests.QuestionUpdateRequest
-import com.example.myapplication.Models.Response.CommissionResponse
 import com.example.myapplication.Models.Response.SecretarySpecializationResponse
 import com.example.myapplication.Models.Db.Student
 import com.example.myapplication.Models.Requests.BitrixAuthRequest
@@ -61,11 +59,7 @@ interface ApiService {
     fun updateProjectStatus(
         @Path("projectId") projectId: Int,
         @Body request: ProjectStatusUpdateRequest
-    ): Call<Project>
-
-
-
-    @GET("api/secretary_specialization/")
+    ): Call<Project>    @GET("api/secretary_specialization/")
     fun getSecretarySpecializations(
         @Query("ID_Secretary") secretaryId: Int
     ): Call<List<SecretarySpecializationResponse>>
@@ -92,13 +86,7 @@ interface ApiService {
         @Query("id_member") secretaryId: Int,
         @Query("role") role: String
     ): Call<List<Commission>>
-
-    @GET("api/secretary/")
-    fun getSecretaryId(
-        @Query("name") name: String,
-        @Query("patronymic") patronymic: String,
-        @Query("surname") surname: String
-    ): Call<SecretaryIdResponse>
+    
 
     @GET("api/protocols/")
     fun getProtocolsByStudentId(@Query("ID_Student") studentId: Int): Call<List<Protocol>>

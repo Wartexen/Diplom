@@ -44,7 +44,6 @@ class StudentGradingActivity : AppCompatActivity() {
     private var selectedScheduleId: Int? = null
     private var secretaryId: Int = -1
     private lateinit var toolbar: androidx.appcompat.widget.Toolbar
-    private lateinit var userName: TextView
     private lateinit var profileIcon: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,7 +51,6 @@ class StudentGradingActivity : AppCompatActivity() {
         setContentView(R.layout.activity_student_grading)
         sharedPref = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
         toolbar = findViewById(R.id.toolbar)
-        userName = findViewById(R.id.userName)
         profileIcon = findViewById(R.id.profileIcon)
         checkAuthStatus()
         try {
@@ -224,45 +222,20 @@ class StudentGradingActivity : AppCompatActivity() {
             startActivity(Intent(this, BitrixAuthActivity::class.java))
             finish()
         } else {
-            val fullName = sharedPref.getString("fullName", "") ?: ""
-            userName.text = formatUserName(fullName)
             profileIcon.setOnClickListener {
                 showProfilePopup(it)
             }
         }
     }
 
-    private fun formatUserName(fullName: String): String {
-        return try {
-            val parts = fullName.split(" ")
-            when {
-                parts.size >= 3 -> "${parts[0]} ${parts[1].first()}.${parts[2].first()}."
-                parts.size == 2 -> "${parts[0]} ${parts[1].first()}."
-                else -> fullName
-            }
-        } catch (e: Exception) {
-            fullName
-        }
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_profile -> {
-                showProfilePopup(findViewById(item.itemId))
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
     private fun showProfilePopup(anchor: View) {
         val popup = PopupMenu(this, anchor)
-        popup.menuInflater.inflate(R.menu.profile_menu, popup.menu)
+        val menu = popup.menu
+        popup.menuInflater.inflate(R.menu.profile_menu, menu)
+
+        // Добавляем ФИО как первый элемент
+        val fullName = sharedPref.getString("fullName", "") ?: "Не указано"
+        menu.add(Menu.NONE, Menu.NONE, 0, fullName).isEnabled = false
 
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {

@@ -73,8 +73,6 @@ class ProjectDetailsActivity : AppCompatActivity() {
     private lateinit var project: Project
     private var mediaRecorder: MediaRecorder? = null
     private lateinit var toolbar: androidx.appcompat.widget.Toolbar
-    private lateinit var userName: TextView
-    private lateinit var profileIcon: ImageView
     private lateinit var sharedPref: SharedPreferences
     private var audioFilePath: String = ""
     private var recordingTime: Int = 0
@@ -131,10 +129,7 @@ class ProjectDetailsActivity : AppCompatActivity() {
 
         sharedPref = getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
         toolbar = findViewById(R.id.toolbar)
-        userName = findViewById(R.id.userName)
-        profileIcon = findViewById(R.id.profileIcon)
 
-        checkAuthStatus()
 
         val retrofit = Retrofit.Builder()
             .baseUrl("http://10.0.2.2:8000/")
@@ -584,74 +579,7 @@ private fun showCancelDefenseConfirmation() {
         .setNegativeButton("Нет", null)
         .show()
 }
-    private fun checkAuthStatus() {
-        val isLoggedIn = sharedPref.getBoolean("isLoggedIn", false)
-        if (!isLoggedIn) {
-            startActivity(Intent(this, BitrixAuthActivity::class.java))
-            finish()
-        } else {
-            val fullName = sharedPref.getString("fullName", "") ?: ""
-            userName.text = formatUserName(fullName)
-            profileIcon.setOnClickListener {showProfilePopup(it)}
-        }
-    }
-    private fun formatUserName(fullName: String): String {
-        return try {
-            val parts = fullName.split(" ")
-            when {
-                parts.size >= 3 -> "${parts[0]} ${parts[1].first()}.${parts[2].first()}."
-                parts.size == 2 -> "${parts[0]} ${parts[1].first()}."
-                else -> fullName
-            }
-        } catch (e: Exception) {
-            fullName
-        }
-    }
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        return true
-    }
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_profile -> {
-                showProfilePopup(findViewById(item.itemId))
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-    private fun showProfilePopup(anchor: View) {
-        val popup = PopupMenu(this, anchor)
-        popup.menuInflater.inflate(R.menu.profile_menu, popup.menu)
 
-        popup.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.menu_logout -> {
-                    showLogoutConfirmation()
-                    true
-                }
-                else -> false
-            }
-        }
-        popup.show()
-    }
-    private fun showLogoutConfirmation() {
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Выход из аккаунта")
-            .setMessage("Вы уверены, что хотите выйти?")
-            .setPositiveButton("Выйти") { _, _ ->
-                logout()
-            }
-            .setNegativeButton("Отмена", null)
-            .show()
-    }
-    private fun logout() {
-        sharedPref.edit().clear().apply()
-        val intent = Intent(this, BitrixAuthActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        startActivity(intent)
-        finish()
-    }
 
     private fun showSavedAudioFilesDialog() {
         if (savedAudioFiles.isEmpty()) {

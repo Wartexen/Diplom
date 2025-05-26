@@ -7,7 +7,10 @@ data class Protocol(
     val DefenseStartTime: String?,
     val DefenseEndTime: String?,
     val Number: String?,
-    val ID_Question: Int,
-    val ID_Student: Int,
-    val ID_DefenseSchedule: Int
+    val ID_Question: Int?,
+    val ID_Student: StudentDetail,
+    val ID_DefenseSchedule: Int,
+    val Status: Boolean?
 )
+
+
