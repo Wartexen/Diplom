@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.ImageView
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -21,121 +22,140 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-
 class StudentGradeAdapter(
-    projects: List<ProjectWithStudents>,
+    private val projects: List<ProjectWithStudents>,
     private val apiService: ApiService
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
-        private const val VIEW_TYPE_PROJECT_HEADER = 0
+        private const val VIEW_TYPE_PROJECT = 0
         private const val VIEW_TYPE_STUDENT = 1
     }
 
-    private val items: List<Any> = flattenProjects(projects)
+    private val items = mutableListOf<Any>()
 
-    class ProjectHeaderViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    init {
+        updateItems()
+    }
+
+    // ViewHolder для заголовка проекта
+    class ProjectViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val projectTitle: TextView = view.findViewById(R.id.tvProjectTitle)
-    }
-    class StudentViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val studentNameTextView: TextView = view.findViewById(R.id.StudentName)
-        val groupTextView: TextView = view.findViewById(R.id.StudentGroup)
-        val gradeSpinner: Spinner = view.findViewById(R.id.spinnerGrade)
+        val expandIcon: ImageView = view.findViewById(R.id.expandIcon)
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return when (items[position]) {
-            is String -> VIEW_TYPE_PROJECT_HEADER
-            is StudentGrade -> VIEW_TYPE_STUDENT
-            else -> throw IllegalArgumentException(" $position")
-        }
+    // ViewHolder для студента
+    class StudentViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val studentName: TextView = view.findViewById(R.id.StudentName)
+        val groupName: TextView = view.findViewById(R.id.StudentGroup)
+        val gradeSpinner: Spinner = view.findViewById(R.id.spinnerGrade)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            VIEW_TYPE_PROJECT_HEADER -> {
+            VIEW_TYPE_PROJECT -> {
                 val view = LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_project_header, parent, false)
-                ProjectHeaderViewHolder(view)
+                ProjectViewHolder(view)
             }
             VIEW_TYPE_STUDENT -> {
                 val view = LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_student_grade, parent, false)
                 StudentViewHolder(view)
             }
-            else -> throw IllegalArgumentException(": $viewType")
+            else -> throw IllegalArgumentException("Invalid view type")
         }
     }
+
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
-            is ProjectHeaderViewHolder -> {
-                val projectTitle = items[position] as String
-                holder.projectTitle.text = projectTitle
-            }
-            is StudentViewHolder -> {
-                val student = items[position] as StudentGrade
+            is ProjectViewHolder -> bindProject(holder, position)
+            is StudentViewHolder -> bindStudent(holder, position)
+        }
+    }
 
-                holder.studentNameTextView.text = student.name
-                holder.groupTextView.text = student.groupName
+    private fun bindProject(holder: ProjectViewHolder, position: Int) {
+        val project = items[position] as ProjectWithStudents
+        holder.projectTitle.text = project.projectTitle
 
-                val grades = listOf(
-                    "",
-                    "Отлично",
-                    "Хорошо",
-                    "Удовлетворительно",
-                    "Неудовлетворительно",
-                    "Пересдача"
-                )
+        // Устанавливаем иконку в зависимости от состояния
+        val iconRes = if (project.isExpanded) {
+            R.drawable.ic_expand_less
+        } else {
+            R.drawable.ic_expand_more
+        }
+        holder.expandIcon.setImageResource(iconRes)
 
-                val adapter = ArrayAdapter(
-                    holder.itemView.context,
-                    android.R.layout.simple_spinner_item,
-                    grades
-                )
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                holder.gradeSpinner.adapter = adapter
+        // Обработка клика по заголовку проекта
+        holder.itemView.setOnClickListener {
+            val adapterPosition = holder.adapterPosition
+            if (adapterPosition != RecyclerView.NO_POSITION) {
+                val projectItem = items[adapterPosition] as ProjectWithStudents
+                projectItem.isExpanded = !projectItem.isExpanded
+                updateItems()
 
-                var isInitialSetup = true
-
-                if (student.grade.isNotEmpty()) {
-                    val index = grades.indexOf(student.grade)
-                    if (index > 0) {
-                        holder.gradeSpinner.setSelection(index)
-                    }
+                if (projectItem.isExpanded) {
+                    notifyItemRangeInserted(adapterPosition + 1, projectItem.students.size)
+                } else {
+                    notifyItemRangeRemoved(adapterPosition + 1, projectItem.students.size)
                 }
+                notifyItemChanged(adapterPosition)
+            }
+        }
+    }
 
-                holder.gradeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                    override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
-                        if (isInitialSetup) {
-                            isInitialSetup = false
-                            return
-                        }
+    private fun bindStudent(holder: StudentViewHolder, position: Int) {
+        val student = items[position] as StudentGrade
+        holder.studentName.text = student.name
+        holder.groupName.text = student.groupName
 
-                        if (pos > 0) {
-                            val selectedGrade = grades[pos]
-                            student.grade = selectedGrade
+        // Настройка Spinner с оценками
+        val grades = listOf(
+            "Выберите оценку",
+            "Отлично",
+            "Хорошо",
+            "Удовлетворительно",
+            "Неудовлетворительно",
+            "Пересдача"
+        )
 
-                            submitGrade(student, holder.itemView.context)
-                        } else {
-                            student.grade = ""
-                        }
-                    }
+        val adapter = ArrayAdapter(
+            holder.itemView.context,
+            android.R.layout.simple_spinner_item,
+            grades
+        ).apply {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        }
 
-                    override fun onNothingSelected(parent: AdapterView<*>) {
-                    }
+        holder.gradeSpinner.adapter = adapter
+
+        // Установка текущей оценки
+        val selectedPosition = grades.indexOfFirst { it == student.grade }.coerceAtLeast(0)
+        holder.gradeSpinner.setSelection(selectedPosition)
+
+        // Обработка выбора оценки
+        holder.gradeSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, pos: Int, id: Long) {
+                if (pos > 0) {
+                    student.grade = grades[pos]
+                    submitGrade(student, holder.itemView.context)
+                } else {
+                    student.grade = ""
                 }
             }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
     }
 
     private fun submitGrade(student: StudentGrade, context: Context) {
-        val gradeRequest = GradeRequest(ID_Student = student.id,Grade = student.grade)
-        apiService.gradeStudent(gradeRequest).enqueue(object : Callback<GradeResponse> {
+        val request = GradeRequest(ID_Student = student.id, Grade = student.grade)
+        apiService.gradeStudent(request).enqueue(object : Callback<GradeResponse> {
             override fun onResponse(call: Call<GradeResponse>, response: Response<GradeResponse>) {
                 if (!response.isSuccessful) {
                     Toast.makeText(
                         context,
-                        "Ошибка при сохранении оценки: ${response.code()}",
+                        "Ошибка сохранения оценки: ${response.code()}",
                         Toast.LENGTH_SHORT
                     ).show()
                 }
@@ -144,30 +164,39 @@ class StudentGradeAdapter(
             override fun onFailure(call: Call<GradeResponse>, t: Throwable) {
                 Toast.makeText(
                     context,
-                    "Ошибка сети при сохранении оценки: ${t.message}",
+                    "Ошибка сети: ${t.message}",
                     Toast.LENGTH_SHORT
                 ).show()
             }
         })
     }
-    override fun getItemCount() = items.size
 
-    private fun flattenProjects(projects: List<ProjectWithStudents>): List<Any> {
-        val result = mutableListOf<Any>()
+    override fun getItemCount(): Int = items.size
 
-        for (project in projects) {
-            result.add(project.projectTitle)
-            result.addAll(project.students)
+    override fun getItemViewType(position: Int): Int {
+        return when (items[position]) {
+            is ProjectWithStudents -> VIEW_TYPE_PROJECT
+            is StudentGrade -> VIEW_TYPE_STUDENT
+            else -> throw IllegalArgumentException("Invalid item type")
         }
+    }
 
-        return result
+    private fun updateItems() {
+        items.clear()
+        projects.forEach { project ->
+            items.add(project)
+            if (project.isExpanded) {
+                items.addAll(project.students)
+            }
+        }
+    }
+
+    fun areAllStudentsGraded(): Boolean {
+        return items.filterIsInstance<StudentGrade>()
+            .all { it.grade.isNotEmpty() && it.grade != "Выберите оценку" }
     }
 
     fun getGrades(): List<StudentGrade> {
         return items.filterIsInstance<StudentGrade>()
-    }
-
-    fun areAllStudentsGraded(): Boolean {
-        return getGrades().all { it.grade.isNotEmpty() && it.grade != "Выберите оценку" }
     }
 }

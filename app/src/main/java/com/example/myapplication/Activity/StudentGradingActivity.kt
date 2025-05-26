@@ -160,18 +160,16 @@ class StudentGradingActivity : AppCompatActivity() {
             }
         })
     }
+   private fun setupAdapter() {
+       progressBar.visibility = View.GONE
+       if (projectsWithStudents.isEmpty()) {
+           Toast.makeText(this, "Нет проектов для оценивания", Toast.LENGTH_SHORT).show()
+           return
+       }
 
-    private fun setupAdapter() {
-        progressBar.visibility = View.GONE
-
-        if (projectsWithStudents.isEmpty()) {
-            Toast.makeText(this, "Нет проектов для оценивания", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        adapter = StudentGradeAdapter(projectsWithStudents, apiService)
-        recyclerView.adapter = adapter
-    }
+       adapter = StudentGradeAdapter(projectsWithStudents, apiService)
+       recyclerView.adapter = adapter
+   }
 
     private fun finishGrading() {
         if (!adapter.areAllStudentsGraded()) {

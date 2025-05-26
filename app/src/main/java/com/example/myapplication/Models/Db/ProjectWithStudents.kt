@@ -2,5 +2,6 @@ package com.example.myapplication.Models.Db
 
 data class ProjectWithStudents(
     val projectTitle: String,
-    val students: MutableList<StudentGrade> = mutableListOf()
+    val students: MutableList<StudentGrade> = mutableListOf(),
+    var isExpanded: Boolean = false
 )
